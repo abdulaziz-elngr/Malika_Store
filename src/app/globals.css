@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ───────── MALIKA design tokens ─────────
+   wine  — sampled from the logo lettering  (#67251B)
+   copper — sampled from the logo outline   (#B88870)
+   cream / sage — supporting neutrals                              */
+@theme {
+  --color-wine-950: #2a0f0b;
+  --color-wine-900: #3d1611;
+  --color-wine-800: #511d15;
+  --color-wine-700: #67251b;
+  --color-wine-600: #823a2d;
+  --color-wine-500: #9c5546;
+  --color-copper-700: #8c6551;
+  --color-copper-600: #a37a63;
+  --color-copper-500: #b88870;
+  --color-copper-300: #dcbfae;
+  --color-copper-200: #ead7ca;
+  --color-cream-50: #fcf9f4;
+  --color-cream-100: #f7f0e6;
+  --color-cream-200: #eee2d2;
+  --color-cream-300: #e0d0bb;
+  --color-sage-700: #5d6b57;
+  --color-sage-500: #8a9a82;
+  --color-sage-200: #d3dccc;
+
+  /* semantic, theme-aware */
+  --color-background: var(--bg);
+  --color-surface: var(--surface);
+  --color-foreground: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-contrast: var(--brand-contrast);
+  --color-accent: var(--accent);
+
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Jost Variable", system-ui, sans-serif;
+
+  --radius-brand: 2px;
+  --shadow-soft: 0 12px 40px -18px rgb(61 22 17 / 0.28);
+  --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  --bg: #f7f0e6;
+  --surface: #fcf9f4;
+  --fg: #2a0f0b;
+  --muted: #6b4a42; /* 7.6:1 on bg */
+  --line: #dccbb6;
+  --brand: #67251b;
+  --brand-contrast: #fcf9f4;
+  --accent: #8c6551;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #1b0f0c;
+  --surface: #26150f;
+  --fg: #f7f0e6;
+  --muted: #c9b3a4;
+  --line: #43271f;
+  --brand: #e8c9b6;
+  --brand-contrast: #1b0f0c;
+  --accent: #dcbfae;
+  color-scheme: dark;
+}
+
+/* Arabic: its own type stack and no letter-spacing (it breaks letter joining). */
+html[lang="ar"] {
+  --font-display: "Amiri", "Cormorant Garamond", serif;
+  --font-body: "IBM Plex Sans Arabic", "Jost Variable", system-ui, sans-serif;
+}
+html[lang="ar"] * {
+  letter-spacing: 0 !important;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+html[lang="ar"] body {
+  line-height: 1.9;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+::selection {
+  background: var(--color-wine-700);
+  color: var(--color-cream-50);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-100%);
+  }
+}
