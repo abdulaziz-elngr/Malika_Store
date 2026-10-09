@@ -41,7 +41,20 @@ export async function Footer() {
         </div>
       </Container>
       <div className="border-t border-line">
-        <Container className="py-6 text-xs text-muted">© {new Date().getFullYear()} MALIKA. {t("rights")}</Container>
+        <Container className="flex flex-col gap-2 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+          <span>© {new Date().getFullYear()} MALIKA. {t("rights")}</span>
+          <span>
+            {t("madeBy")}{" "}
+            <a
+              href="https://tecn0-platform.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-foreground underline-offset-4 transition-colors hover:text-accent hover:underline"
+            >
+              Tecno
+            </a>
+          </span>
+        </Container>
       </div>
     </footer>
   );
