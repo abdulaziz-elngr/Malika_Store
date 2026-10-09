@@ -4,7 +4,7 @@ import { Container } from "@/components/ui/container";
 import { Link } from "@/i18n/navigation";
 import { navItems } from "./nav-items";
 
-export async function Footer() {
+export async function Footer({ items }: { items?: { id: string; href: string; label: string }[] }) {
   const t = await getTranslations("footer");
   const n = await getTranslations("nav");
   const care = [
@@ -13,6 +13,8 @@ export async function Footer() {
     { key: "privacy", href: "/privacy" },
     { key: "terms", href: "/terms" },
   ] as const;
+  // CMS footer menu (labels resolved in the layout) falls back to the default explore links.
+  const explore = items?.length ? items : navItems.map((i) => ({ id: i.key as string, href: i.href, label: n(i.key) }));
   const col = "space-y-3 text-sm text-muted";
   const link = "transition-colors hover:text-foreground";
 
@@ -26,8 +28,8 @@ export async function Footer() {
         <div>
           <h2 className="mb-5 text-xs font-medium uppercase tracking-[0.22em] text-accent">{t("explore")}</h2>
           <ul className={col}>
-            {navItems.map((i) => (
-              <li key={i.key}><Link href={i.href} className={link}>{n(i.key)}</Link></li>
+            {explore.map((i) => (
+              <li key={i.id}><Link href={i.href} className={link}>{i.label}</Link></li>
             ))}
           </ul>
         </div>
@@ -41,20 +43,7 @@ export async function Footer() {
         </div>
       </Container>
       <div className="border-t border-line">
-        <Container className="flex flex-col gap-2 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} MALIKA. {t("rights")}</span>
-          <span>
-            {t("madeBy")}{" "}
-            <a
-              href="https://tecn0-platform.vercel.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-foreground underline-offset-4 transition-colors hover:text-accent hover:underline"
-            >
-              Tecno
-            </a>
-          </span>
-        </Container>
+        <Container className="py-6 text-xs text-muted">© {new Date().getFullYear()} MALIKA. {t("rights")}</Container>
       </div>
     </footer>
   );

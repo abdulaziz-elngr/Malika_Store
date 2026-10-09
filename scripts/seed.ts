@@ -1,12 +1,13 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../src/db/client";
 import { runMigrations } from "../src/db/migrate";
-import { addresses, categories, collections, coupons, customers, inventoryMovements, notifications, orderEvents, orders, productCollections, productImages, productVariants, products, wishlistItems } from "../src/db/schema";
+import { addresses, banners, categories, collections, coupons, customers, homepageSections, inventoryMovements, navigationItems, newsletterSubscribers, notifications, orderEvents, orders, pages, productCollections, productImages, productVariants, products, reviews, wishlistItems } from "../src/db/schema";
 import { seedHistory } from "./seed-history";
 import { hashPassword } from "../src/server/auth/password";
 import { placeOrder } from "../src/server/services/orders";
 import { createAdminUser } from "../src/server/services/admin-auth";
 import { syncRbac } from "../src/server/services/rbac";
+import { syncHomepageSections } from "../src/server/services/admin-content";
 import { SYSTEM_ROLES, type SystemRoleKey } from "../src/lib/permissions";
 
 type Tone = "wine" | "copper" | "cream" | "sage";
@@ -122,10 +123,221 @@ async function seedCommerce(catId: Record<string, string>, colId: Record<string,
   console.log(`Demo customer: ${DEMO_CUSTOMER.email} / ${DEMO_CUSTOMER.password}  (orders ${o1.number}, ${o2.number})`);
 }
 
+/* ───────── CMS content: navigation menus, homepage builder, banners, static pages, reviews, newsletter ───────── */
+
+async function seedContent() {
+  // 1) Homepage builder — all ten sections in their default order, then the configs that carry real copy.
+  await syncHomepageSections();
+  const sectionRows = await db.select().from(homepageSections);
+  const sectionId = (key: string) => sectionRows.find((s) => s.key === key)?.id;
+  const testimonialsId = sectionId("testimonials");
+  if (testimonialsId) {
+    await db.update(homepageSections).set({
+      config: {
+        itemsAr: [
+          "الستان يتحرك بشكل أجمل مما توقّعت، والخياطة نظيفة حتى من الداخل. — ليلى حسّان",
+          "طلبت فستان السهرة فوصل خلال يومين بتغليف جميل. — مريم عبدالعزيز",
+          "أول عباية أرتديها أبقى مرتاحة بها طوال اليوم. — سارة منصور",
+        ],
+        itemsEn: [
+          "The silk feels better than the photos — and the seams are clean inside out. — Laila H.",
+          "My evening dress arrived in two days, wrapped beautifully. — Mariam A.",
+          "The first abaya I forget I am wearing, all day long. — Sara M.",
+        ],
+      },
+    }).where(eq(homepageSections.id, testimonialsId));
+  }
+  const bestSellersId = sectionId("best_sellers");
+  if (bestSellersId) await db.update(homepageSections).set({ config: { count: "8" } }).where(eq(homepageSections.id, bestSellersId));
+
+  // 2) Campaign banners: announcement strip, home cards, shop promo.
+  await db.insert(banners).values([
+    { position: "strip", tone: "wine", sortOrder: 0, titleAr: "مجموعة خريف وشتاء ٢٠٢٦ وصلت حديثاً", titleEn: "Autumn / Winter 2026 has arrived", ctaLabelAr: "تسوّقيها", ctaLabelEn: "Shop it", href: "/collections/autumn-winter-2026" },
+    { position: "home", tone: "wine", sortOrder: 0, titleAr: "معاينة خاصة لعضوات الدائرة", titleEn: "A private preview for the inner circle", bodyAr: "أول الوصول إلى القطع الجديدة — قبل الجميع بأيام.", bodyEn: "First access to new pieces — days before anyone else.", ctaLabelAr: "اكتشفي المجموعة", ctaLabelEn: "Discover the collection", href: "/collections/autumn-winter-2026" },
+    { position: "promo", tone: "sage", sortOrder: 0, titleAr: "الأكثر رغبة هذا الموسم", titleEn: "The most wanted this season", bodyAr: "قطع عادت إليها عميلاتنا مراراً.", bodyEn: "Pieces our clients return to, again and again.", ctaLabelAr: "تسوّقي الآن", ctaLabelEn: "Shop now", href: "/shop?sort=best" },
+  ]);
+
+  // 3) Header + footer menus (the Navigation CMS starts fully populated).
+  await db.insert(navigationItems).values([
+    { menu: "header", sortOrder: 0, labelAr: "تسوّقي", labelEn: "Shop", href: "/shop" },
+    { menu: "header", sortOrder: 1, labelAr: "الوصلات الجديدة", labelEn: "New arrivals", href: "/shop?sort=newest" },
+    { menu: "header", sortOrder: 2, labelAr: "المجموعات", labelEn: "Collections", href: "/collections" },
+    { menu: "header", sortOrder: 3, labelAr: "نسائي", labelEn: "Women", href: "/women" },
+    { menu: "header", sortOrder: 4, labelAr: "رجالي", labelEn: "Men", href: "/men" },
+    { menu: "header", sortOrder: 5, labelAr: "عن مالكا", labelEn: "About", href: "/about" },
+    { menu: "footer", sortOrder: 0, labelAr: "عن مالكا", labelEn: "About MALIKA", href: "/about" },
+    { menu: "footer", sortOrder: 1, labelAr: "المجموعات", labelEn: "Collections", href: "/collections" },
+    { menu: "footer", sortOrder: 2, labelAr: "تتبّعي طلبك", labelEn: "Track your order", href: "/track" },
+    { menu: "footer", sortOrder: 3, labelAr: "حسابي", labelEn: "My account", href: "/account" },
+  ]);
+
+  // 4) Static pages — the routes the footer and checkout link to (/about /contact /faq /privacy /terms).
+  await db.insert(pages).values([
+    {
+      slug: "about", visible: true,
+      titleAr: "عن مالكا", titleEn: "About MALIKA",
+      bodyAr: [
+        "ولدت مالكا في القاهرة من رغبة واحدة: أن تُصنع الملابس كما تُصنع القطع الثمينة — بقماش يُحسّ قبل أن يُرى، وخياطة نظيفة من الداخل، وتفاصيل تصمد بعد موسمين.",
+        "نعمل مع دائرة صغيرة من النسّاجين والمنتجين المختارين، وننتج كميات محدودة من كل قطعة حتى تبقى الجودة تحت المراقبة، ولا يتحوّل الإنتاج إلى ضخامة بلا رقابة.",
+        "اسم مالكا مأخوذ من الكلمة التي تعني الأمارة والملك — وكذلك نراها: امرأة تعرف ما ترتديه ولماذا ترتديه.",
+        "في كل موسم نختار لوحة واحدة مستوحاة من شعارنا: النبيذ الدافئ، والنحاس الهادئ، الكريمي، والأخضر المهدّب — الصيحات تمرّ، هذه اللوحة تبقى.",
+        "أتيليه مالكا — الزمالك، القاهرة. معاينات بموعد مسبق.",
+      ].join("\n"),
+      bodyEn: [
+        "MALIKA was born in Cairo from a single desire: clothes made the way precious pieces are made — fabric you feel before you see it, clean inside stitching, and details that survive two seasons.",
+        "We work with a small circle of Egyptian weavers and vetted makers, producing limited runs of every piece so quality stays watched and production never becomes scale for its own sake.",
+        "The name MALIKA comes from the word for queen — which is exactly how we see her: a woman who knows what she wears, and why.",
+        "Each season we choose one palette drawn from our logo: warm wine, quiet copper, cream and muted sage. Trends pass; this palette stays.",
+        "MALIKA Atelier — Zamalek, Cairo. Fittings by appointment.",
+      ].join("\n"),
+      seoTitleAr: "عن مالكا — أتيليه مصري بكميات محدودة", seoTitleEn: "About MALIKA — a small-batch Cairo atelier",
+      seoDescriptionAr: "قصة مالكا: أتيليه في القاهرة يصنع قطعاً بكميات محدودة بلوحة ألوان مستوحاة من شعاره.",
+      seoDescriptionEn: "The story of MALIKA: a Cairo atelier producing small runs in a palette drawn from its logo.",
+    },
+    {
+      slug: "contact", visible: true,
+      titleAr: "تواصلي معنا", titleEn: "Contact us",
+      bodyAr: [
+        "أتيليه مالكا — القاهرة",
+        "١٢ شارع الكورنيش، الزمالك، القاهرة ١١٥٦١",
+        "هاتف: 0100 123 4567",
+        "البريد: hello@malika.example",
+        "من السبت إلى الخميس، ١١ صباحاً حتى ٩ مساءً",
+        "الطلبات والتتبع: orders@malika.example",
+        "الاستبدال والإرجاع خلال ١٤ يوماً من الاستلام",
+        "المعاينات الشخصية بحجز مسبق فقط",
+      ].join("\n"),
+      bodyEn: [
+        "MALIKA Atelier — Cairo",
+        "12 Corniche Street, Zamalek, Cairo 11561",
+        "Phone: 0100 123 4567",
+        "Email: hello@malika.example",
+        "Saturday to Thursday, 11:00 until 21:00",
+        "Orders & tracking: orders@malika.example",
+        "Exchanges and returns within 14 days of delivery",
+        "Private fittings by appointment only",
+      ].join("\n"),
+      seoTitleAr: "تواصلي معنا — مالكا", seoTitleEn: "Contact us — MALIKA",
+      seoDescriptionAr: "عنوان الأتيليه في الزمالك، ساعات العمل، وطرق التواصل مع خدمة العملاء.",
+      seoDescriptionEn: "Our Zamalek atelier address, opening hours, and how to reach customer care.",
+    },
+    {
+      slug: "faq", visible: true,
+      titleAr: "الأسئلة الشائعة", titleEn: "Frequently asked questions",
+      bodyAr: [
+        "كم تستغرق مدة التوصيل؟",
+        "داخل القاهرة يوم إلى يومين، وبقية المحافظات من يومين إلى أربعة أيام عمل.",
+        "هل يمكنني استبدال قطعة؟",
+        "نعم، خلال ١٤ يوماً من الاستلام، بشرط أن تكون القطعة بحالتها الأصلية ومعها بطاقتها.",
+        "كيف أعرف مقاسي؟",
+        "ستجدِ داخل صفحة كل قطعة جدول مقاسات كامل، ويمكنك مراسلتنا لقياسات أدق.",
+        "هل الشحن مجاني؟",
+        "نعم، للطلبات التي تتجاوز حدّ الشحن المجاني المعلن في صفحة الدفع.",
+        "ما طرق الدفع المتاحة؟",
+        "الدفع عند الاستلام، وبطاقات الائتمان، والمحافظ الإلكترونية.",
+        "هل أستطيع معاينة القطع قبل الشراء؟",
+        "بالتأكيد — احجزِي موعداً في الأتيليه من صفحة تواصلي معنا.",
+      ].join("\n"),
+      bodyEn: [
+        "How long does delivery take?",
+        "Within Cairo in 1–2 days, and 2–4 working days across the rest of Egypt.",
+        "Can I exchange a piece?",
+        "Yes — within 14 days of delivery, as long as it is unworn with its tags attached.",
+        "How do I find my size?",
+        "Every product page carries a full size chart; write to us and we will help with exact measurements.",
+        "Is shipping free?",
+        "Yes, for orders above the free-shipping threshold announced at checkout.",
+        "Which payment methods do you accept?",
+        "Cash on delivery, credit cards, and digital wallets.",
+        "Can I see pieces before buying?",
+        "Of course — book an appointment at the atelier from the Contact us page.",
+      ].join("\n"),
+      seoTitleAr: "الأسئلة الشائعة — مالكا", seoTitleEn: "FAQ — MALIKA",
+      seoDescriptionAr: "كل ما يخص التوصيل والاستبدال والمقاسات والدفع في متجر مالكا.",
+      seoDescriptionEn: "Delivery, exchanges, sizing and payment — everything about shopping at MALIKA.",
+    },
+    {
+      slug: "privacy", visible: true,
+      titleAr: "سياسة الخصوصية", titleEn: "Privacy policy",
+      bodyAr: [
+        "توضّح هذه السياسة كيف تجمع مالكا وتستخدم وتحمي معلوماتك عند تسوّقك من متجرنا.",
+        "البيانات التي نجمعها: اسمك وعنوانك ورقم هاتفك وبريدك الإلكتروني التي تزوّدنا بها عند إتمام الطلب أو إنشاء حساب، إضافة إلى سجل طلباتك وقائمة مفضلتك.",
+        "كيف نستخدم البيانات: لتنفيذ الطلب وتسليمه، وللتواصل معك بخصوصه، ولتحسين تجربة المتجر ودعم العملاء — ولا نستخدم بياناتك لإعلانات طرف ثالث دون موافقتك.",
+        "مع من نشاركها: مع شركة الشحن لتسليم طلبك ومع مزوّد الدفع لإتمام العملية فقط، ولا نبيع معلوماتك لأي جهة.",
+        "ملفات الارتباط: نستخدم ملفات ضرورية لتسجيل دخولك وسلة التوق، وملفات تحليل محدودة لفهم زيارات المتجر، ويمكنك إيقافها من إعدادات المتصفح.",
+        "حقوقك: يمكنك طلب نسخة من بياناتك أو تصحيحها أو حذف حسابك في أي وقت عبر hello@malika.example، ونستجيب خلال ٣٠ يوماً.",
+      ].join("\n"),
+      bodyEn: [
+        "This policy explains how MALIKA collects, uses and protects your information when you shop with us.",
+        "Data we collect: your name, address, phone number and email provided at checkout or registration, plus your order history and wishlist.",
+        "How we use it: to fulfil and deliver your order, to contact you about it, and to improve the store and customer care — never for third-party advertising without your consent.",
+        "Who we share it with: your courier to deliver the order and your payment provider to complete the transaction. We never sell your data.",
+        "Cookies: essential cookies keep you signed in and remember your cart; limited analytics cookies help us understand visits and can be turned off in your browser settings.",
+        "Your rights: request a copy, correction or deletion of your account any time at hello@malika.example — we respond within 30 days.",
+      ].join("\n"),
+      seoTitleAr: "سياسة الخصوصية — مالكا", seoTitleEn: "Privacy policy — MALIKA",
+      seoDescriptionAr: "كيف نجمع بياناتك ونستخدمها ونحميها، وحقوقك في متجر مالكا.",
+      seoDescriptionEn: "How we collect, use and protect your data — and your rights at MALIKA.",
+    },
+    {
+      slug: "terms", visible: true,
+      titleAr: "الشروط والأحكام", titleEn: "Terms and conditions",
+      bodyAr: [
+        "باستخدامك متجر مالكا فإنك توافق على الشروط التالية.",
+        "الحساب والبيانات: تتعهّد بصحة بياناتك عند إنشاء الحساب، وأنت مسؤول عن حماية كلمة المرور الخاصة بك.",
+        "الأسعار والدفع: جميع الأسعار بالجنيه المصري وما لم يُذكر غير ذلك؛ ويُؤكَّد الطلب بعد نجاح الدفع أو تأكيد الدفع عند الاستلام.",
+        "الطلبات والتوفر: نحتفظ بحق إلغاء الطلب إذا كانت القطعة غير متوفرة فعلياً، وسنعيد المبلغ كاملاً في تلك الحالة.",
+        "الاستبدال والإرجاع: خلال ١٤ يوماً من الاستلام على أن تكون القطعة غير مستعملة؛ ولا تُقبل العودة للقطع المفصّلة حسب القياس أو المساحات الشخصية.",
+        "الملكية الفكرية: اسم مالكا وشعاره وصور القطع ملك للعلامة، ويُمنع استخدامها دون إذن خطي.",
+        "القانون الواجب: تُدار هذه الشروط وفق قوانين جمهورية مصر العربية، وللقضاء أمام محاكم القاهرة.",
+      ].join("\n"),
+      bodyEn: [
+        "By shopping at MALIKA you agree to the following terms.",
+        "Account & data: you confirm your details when registering and are responsible for keeping your password safe.",
+        "Prices & payment: all prices are in EGP unless stated otherwise; an order is confirmed after successful payment or confirmation of cash on delivery.",
+        "Orders & availability: we may cancel an order if a piece is genuinely unavailable, in which case you are refunded in full.",
+        "Exchanges & returns: within 14 days of delivery, unworn with tags; tailored-to-measure pieces and personal items cannot be returned.",
+        "Intellectual property: the MALIKA name, logo and product photography belong to the brand and may not be used without written permission.",
+        "Governing law: these terms are governed by the laws of Egypt, with the courts of Cairo having jurisdiction.",
+      ].join("\n"),
+      seoTitleAr: "الشروط والأحكام — مالكا", seoTitleEn: "Terms and conditions — MALIKA",
+      seoDescriptionAr: "شروط الشراء والاستبدال والدفع والملكية الفكرية في متجر مالكا.",
+      seoDescriptionEn: "Shopping, exchange, payment and IP terms for the MALIKA store.",
+    },
+  ]);
+
+  // 5) Product reviews — a believable mix for the moderation queue (some pending).
+  const productRows = await db.select({ id: products.id, slug: products.slug }).from(products);
+  const idBySlug = Object.fromEntries(productRows.map((r) => [r.slug, r.id]));
+  const reviewSeed = [
+    { slug: "vesper-satin-midi-dress", name: "ليلى حسّان", email: "laila.hassan@example.com", rating: 5, body: "الستان يتحرك بشكل أجمل مما توقّعت، والخياطة نظيفة حتى من داخل الفستان. لبستُه ثلاث مرات ولم يتغيّر شيء.", status: "approved", featured: true, days: 24 },
+    { slug: "noor-open-abaya", name: "سارة منصور", email: "sara.mansour@example.com", rating: 5, body: "أفضل عباية اشتريتها هذا العام — القماش خفيف ويهبط بشكل مثالي، والمقاس مطابق تماماً لجدول المقاسات.", status: "approved", featured: false, days: 18 },
+    { slug: "layla-silk-blouse", name: "Nour Adel", email: "nour.adel@example.com", rating: 4, body: "Beautiful silk and a clean cut. Delivery to Alexandria took two days — I will order the wine colour next.", status: "approved", featured: false, days: 11 },
+    { slug: "dalia-knit-cardigan", name: "هدى رشدي", email: "hoda.rashad@example.com", rating: 5, body: "دافي وناعم واللون الكريمي مطابق تماماً للصور. غسلته مرتين ولم يتشوّه إطلاقاً.", status: "approved", featured: true, days: 7 },
+    { slug: "karim-oxford-shirt", name: "كريم عبدالله", email: "karim.abdel@example.com", rating: 3, body: "القماش ممتاز لكن الأكمام أطول قليلاً مما استنتجته من الجدول. أحتاج استبدالاً بمقاس أصغر.", status: "pending", featured: false, days: 3 },
+    { slug: "nadia-silk-scarf", name: "Salma Hassan", email: "salma.hassan@example.com", rating: 5, body: "The hand-rolled edges feel genuinely luxurious — I bought a second one as a gift.", status: "pending", featured: false, days: 1 },
+  ] as const;
+  const reviewValues = reviewSeed.filter((r) => idBySlug[r.slug]).map((r) => {
+    const at = new Date(Date.now() - r.days * 86_400_000);
+    return { productId: idBySlug[r.slug]!, name: r.name, email: r.email, rating: r.rating, body: r.body, status: r.status, featured: r.featured, createdAt: at, updatedAt: at };
+  });
+  if (reviewValues.length) await db.insert(reviews).values(reviewValues);
+
+  // 6) Newsletter subscribers so the marketing screen opens with real rows.
+  await db.insert(newsletterSubscribers).values([
+    { email: "nour.elhakim@example.com", source: "footer", locale: "ar" },
+    { email: "yasmin.tarek@example.com", source: "footer", locale: "en" },
+    { email: "salma.hassan@example.com", source: "home", locale: "ar" },
+    { email: "omar.fouad@example.com", source: "footer", locale: "en" },
+  ]);
+
+  console.log(`Seeded CMS content: 10 homepage sections, 3 banners, 10 menu items, 5 pages, ${reviewValues.length} reviews, 4 subscribers.`);
+}
+
 async function main() {
   await runMigrations();
   // Demo reset: wipes the catalogue and everything that references it (orders, customers, coupons).
-  await db.execute(sql`truncate table storefront_visit, audit_log, login_activity, admin_session, admin_user, role_permission, permission, role, site_setting, notification, coupon_usage, order_event, order_item, "order", wishlist_item, address, customer_session, customer, coupon, inventory_movement, product_collection, product_variant, product_image, product, collection, category restart identity cascade`);
+  await db.execute(sql`truncate table storefront_visit, audit_log, login_activity, admin_session, admin_user, role_permission, permission, role, site_setting, notification, coupon_usage, order_event, order_item, "order", wishlist_item, address, customer_session, customer, coupon, inventory_movement, product_collection, product_variant, product_image, product, collection, category, review, banner, homepage_section, page, navigation_item, media, newsletter_subscriber restart identity cascade`);
 
   const catRows = await db.insert(categories).values(cats.map((c, i) => ({ slug: c.slug, nameAr: c.ar, nameEn: c.en, tone: c.tone, sortOrder: i }))).returning();
   const colRows = await db.insert(collections).values(cols.map((c) => ({ slug: c.slug, nameAr: c.ar, nameEn: c.en, descriptionAr: c.dAr, descriptionEn: c.dEn, tone: c.tone }))).returning();
@@ -164,6 +376,7 @@ async function main() {
   }
   await seedCommerce(catId, colId);
   await seedStaff();
+  await seedContent();
   console.log(`Seeded ${cats.length} categories, ${cols.length} collections, ${list.length} products.`);
 }
 

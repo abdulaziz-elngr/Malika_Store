@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { boolean, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 const stamps = {
@@ -113,6 +114,8 @@ export const siteSettings = pgTable("site_setting", {
   updatedBy: uuid("updated_by").references(() => adminUsers.id, { onDelete: "set null" }),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const adminUserRelations = relations(adminUsers, ({ one }) => ({ role: one(roles, { fields: [adminUsers.roleId], references: [roles.id] }) }));
 
 /**
  * One row per browser session that opens the storefront (anonymous random id, no personal data).

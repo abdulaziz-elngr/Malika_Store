@@ -1,0 +1,16 @@
+{
+  "en": {
+    "validation": {
+      "selfDelete": "You cannot delete your own account.",
+      "roleInUse": "This role is still assigned to staff accounts.",
+      "roleSystem": "This system role cannot be deleted."
+    }
+  },
+  "ar": {
+    "validation": {
+      "selfDelete": "لا يمكنك حذف حسابك بنفسك.",
+      "roleInUse": "ما زال هذا الدور مسندًا إلى حسابات موظفين.",
+      "roleSystem": "لا يمكن حذف هذا الدور النظامي."
+    }
+  }
+}

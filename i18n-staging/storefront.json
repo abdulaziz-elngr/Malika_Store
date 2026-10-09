@@ -1,0 +1,54 @@
+{
+  "en": {
+    "homeSections": {
+      "bestSellers": {
+        "eyebrow": "Most wanted",
+        "title": "Best sellers",
+        "viewAll": "Shop all"
+      },
+      "testimonials": {
+        "eyebrow": "In their words",
+        "title": "From our clients"
+      },
+      "newsletter": {
+        "eyebrow": "The inner circle",
+        "title": "Letters from the atelier",
+        "body": "New arrivals, private previews and quiet notes — once a week, never more.",
+        "placeholder": "Your email address",
+        "cta": "Subscribe",
+        "joining": "Joining…",
+        "success": "Welcome to the inner circle — keep an eye on your inbox."
+      }
+    },
+    "cmsPage": {
+      "eyebrow": "MALIKA",
+      "empty": "This page does not have any content yet."
+    }
+  },
+  "ar": {
+    "homeSections": {
+      "bestSellers": {
+        "eyebrow": "الأكثر رغبة",
+        "title": "الأكثر مبيعاً",
+        "viewAll": "تسوّقي الكل"
+      },
+      "testimonials": {
+        "eyebrow": "بكلماتهنّ",
+        "title": "من عميلاتنا"
+      },
+      "newsletter": {
+        "eyebrow": "الدائرة الخاصة",
+        "title": "رسائل من الأتيليه",
+        "body": "وصلات جديدة، معاينات خاصة، وملاحظات هادئة — مرّة أسبوعياً، لا أكثر.",
+        "placeholder": "بريدك الإلكتروني",
+        "cta": "اشتراك",
+        "joining": "جارٍ الاشتراك…",
+        "success": "أهلًا بك في الدائرة الخاصة — تفقّدي بريدك."
+      }
+    },
+    "cmsPage": {
+      "eyebrow": "MALIKA",
+      "empty": "لا تحتوي هذه الصفحة على محتوى بعد."
+    }
+  }
+}

@@ -4,11 +4,12 @@ import { useTranslations } from "next-intl";
 import { useRef } from "react";
 import { Container } from "@/components/ui/container";
 import { ImageSlot } from "./image-slot";
+import type { SectionOverrides } from "./overrides";
 import { SectionHeading } from "./section-heading";
 
 const looks = ["wine", "cream", "copper", "sage", "wine", "cream"] as const;
 
-export function Lookbook() {
+export function Lookbook({ o }: { o?: SectionOverrides }) {
   const t = useTranslations("lookbook");
   const track = useRef<HTMLDivElement>(null);
 
@@ -31,14 +32,14 @@ export function Lookbook() {
   return (
     <section className="overflow-hidden py-24 lg:py-32">
       <Container className="mb-12 flex flex-wrap items-end justify-between gap-4">
-        <SectionHeading eyebrow={t("eyebrow")} title={t("title")} />
-        <p className="text-sm text-muted">{t("hint")}</p>
+        <SectionHeading eyebrow={o?.eyebrow ?? t("eyebrow")} title={o?.title ?? t("title")} />
+        <p className="text-sm text-muted">{o?.body ?? t("hint")}</p>
       </Container>
       <div
         ref={track}
         data-cursor="drag"
         role="region"
-        aria-label={t("title")}
+        aria-label={o?.title ?? t("title")}
         tabIndex={0}
         onPointerDown={onDown}
         onPointerMove={onMove}

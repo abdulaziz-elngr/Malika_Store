@@ -6,8 +6,9 @@ import { deltaPercent, type ResolvedRange } from "@/lib/date-range";
 import type { AdminSessionUser } from "@/server/auth/admin-session";
 import { can } from "@/server/auth/rbac";
 import { formatOrderNumber } from "./orders";
+import { getLowStockThreshold } from "./settings";
 
-export const LOW_STOCK_THRESHOLD = 5; // moves to admin settings with the inventory screens (Phase 7)
+export const LOW_STOCK_THRESHOLD = 5; // fallback; the dashboard reads the admin-configurable value (settings → low-stock)
 
 /** "Valid" orders count towards revenue: everything except cancelled and returned ones. */
 const valid = sql`${orders.status} not in ('cancelled','returned')`;
@@ -94,11 +95,12 @@ async function topCategories(range: ResolvedRange) {
 }
 
 async function stockHealth() {
+  const threshold = await getLowStockThreshold();
   const base = and(eq(products.status, "published"));
   const [[c], rows] = await Promise.all([
     db
       .select({
-        low: sql<number>`count(*) filter (where ${productVariants.stock} > 0 and ${productVariants.stock} <= ${LOW_STOCK_THRESHOLD})::int`,
+        low: sql<number>`count(*) filter (where ${productVariants.stock} > 0 and ${productVariants.stock} <= ${threshold})::int`,
         out: sql<number>`count(*) filter (where ${productVariants.stock} = 0)::int`,
         units: sql<number>`coalesce(sum(${productVariants.stock}),0)::int`,
       })
@@ -106,7 +108,7 @@ async function stockHealth() {
     db
       .select({ productId: products.id, slug: products.slug, nameAr: products.nameAr, nameEn: products.nameEn, size: productVariants.size, colorAr: productVariants.colorNameAr, colorEn: productVariants.colorNameEn, stock: productVariants.stock })
       .from(productVariants).innerJoin(products, eq(products.id, productVariants.productId))
-      .where(and(base, sql`${productVariants.stock} <= ${LOW_STOCK_THRESHOLD}`))
+      .where(and(base, sql`${productVariants.stock} <= ${threshold}`))
       .orderBy(asc(productVariants.stock), asc(products.nameEn)).limit(60),
   ]);
   const grouped = new Map<string, { slug: string; nameAr: string; nameEn: string; variants: { size: string; colorAr: string; colorEn: string; stock: number }[] }>();
@@ -123,7 +125,7 @@ const recentOrders = () =>
     .then((rows) => rows.map((r) => ({ ...r, number: formatOrderNumber(r.seq) })));
 
 const recentCustomers = () =>
-  db.select({ id: customers.id, name: customers.name, email: customers.email, createdAt: customers.createdAt, orders: sql<number>`(select count(*)::int from "order" o where o.customer_id = ${customers.id})` }).from(customers).orderBy(desc(customers.createdAt)).limit(5);
+  db.select({ id: customers.id, name: customers.name, email: customers.email, createdAt: customers.createdAt, orders: sql<number>`(select count(*)::int from "order" o where o.customer_id = "customer"."id")` }).from(customers).orderBy(desc(customers.createdAt)).limit(5);
 
 async function attention() {
   const [r] = await db
