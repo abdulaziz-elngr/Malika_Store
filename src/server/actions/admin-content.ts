@@ -209,8 +209,10 @@ export async function deleteMediaAction(fd: FormData): Promise<void> {
   if (targets.length) {
     const { unlink } = await import("node:fs/promises");
     const { join } = await import("node:path");
+    const { del } = await import("@vercel/blob");
     await Promise.allSettled(
       targets.map(({ url }) => {
+        if (/^https?:\/\//.test(url)) return del(url);
         const rel = url.replace(/^\/uploads\//, "").replace(/^\/+/, "");
         if (rel.includes("..")) return Promise.resolve();
         return unlink(join(process.cwd(), "public", "uploads", rel));
