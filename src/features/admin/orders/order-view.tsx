@@ -7,8 +7,9 @@ import { formatMoney, pick, type Loc } from "@/lib/localize";
 import type { OrderAdmin } from "@/server/services/admin-sales";
 
 /** IDs we can label from the storefront checkout namespaces; anything else falls back to the raw id. */
+// "express" and "card" are no longer offered but still exist on older orders.
 const DELIVERY_IDS = new Set(["standard", "express"]);
-const PAYMENT_IDS = new Set(["cod", "card", "wallet"]);
+const PAYMENT_IDS = new Set(["cod", "card", "wallet", "instapay"]);
 
 /** Read-only order body: customer & address, items, totals, details and the status trail. */
 export async function OrderView({ order }: { order: OrderAdmin }) {
@@ -105,6 +106,12 @@ export async function OrderView({ order }: { order: OrderAdmin }) {
             <TotalRow label={o("shipping")} value={order.shippingMinor > 0 ? formatMoney(order.shippingMinor, loc) : o("free")} />
             {order.couponCode ? <TotalRow label={t("coupon")} value={order.couponCode} ltr /> : null}
             <TotalRow label={o("total")} value={formatMoney(order.totalMinor, loc)} strong />
+            {order.prepaidMinor > 0 ? (
+              <>
+                <TotalRow label={order.paymentMethod === "cod" ? t("depositPaid") : t("paidByTransfer")} value={`− ${formatMoney(order.prepaidMinor, loc)}`} />
+                <TotalRow label={t("dueOnDelivery")} value={formatMoney(Math.max(0, order.totalMinor - order.prepaidMinor), loc)} strong />
+              </>
+            ) : null}
           </dl>
         </Card>
 
@@ -120,7 +127,19 @@ export async function OrderView({ order }: { order: OrderAdmin }) {
               value={PAYMENT_IDS.has(order.paymentMethod) ? co(`payment.${order.paymentMethod}` as "payment.cod") : order.paymentMethod}
             />
             {order.paymentReference ? <MetaRow label={t("paymentReference")} value={order.paymentReference} /> : null}
+            {order.transferChannel ? <MetaRow label={t("transferChannel")} value={PAYMENT_IDS.has(order.transferChannel) ? co(`payment.${order.transferChannel}` as "payment.wallet") : order.transferChannel} /> : null}
+            {order.senderPhone ? <MetaRow label={t("senderPhone")} value={order.senderPhone} /> : null}
           </dl>
+          {order.paymentProofUrl ? (
+            <div className="space-y-2 border-t border-line p-5">
+              <p className="text-xs uppercase tracking-[0.15em] text-accent">{t("receipt")}</p>
+              <a href={order.paymentProofUrl} target="_blank" rel="noopener noreferrer" className="block w-fit">
+                {/* eslint-disable-next-line @next/next/no-img-element -- customer-supplied receipt image on our own storage */}
+                <img src={order.paymentProofUrl} alt={t("receipt")} className="max-h-72 max-w-full border border-line object-contain" />
+              </a>
+              <a href={order.paymentProofUrl} target="_blank" rel="noopener noreferrer" className="text-xs uppercase tracking-[0.15em] text-brand underline underline-offset-4">{t("openReceipt")}</a>
+            </div>
+          ) : null}
         </Card>
 
         <Card>

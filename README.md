@@ -71,3 +71,12 @@ httpOnly cookies, and Zod-validated server actions. Every admin change is writte
 ---
 
 © 2026 MALIKA — Elegance, Reimagined.
+
+## Payments & delivery
+
+- **Delivery**: one standard method (EGP 60, free over EGP 3,000). No express delivery and no free first-order delivery.
+- **Payment methods**: cash on delivery, mobile wallet, InstaPay. Card payment was removed.
+- **Admin → Settings → Payments**: add the wallet numbers / InstaPay accounts customers pay to (one per line) and an optional cash-on-delivery **deposit**. A method only shows at checkout once it has at least one account.
+- **Wallet / InstaPay**: the customer transfers the full total, uploads the receipt and enters the number they sent from. The order stays *pending* until staff verify the receipt and mark it paid.
+- **Cash on delivery with a deposit**: the customer first transfers the deposit (same receipt + number), and the courier collects `total − deposit`.
+- Receipts are uploaded through `/api/checkout/receipt` (Cloudinary in production, `public/uploads/receipts` locally). Run `npm run db:migrate` to add the new order columns (migration `0006_payment_transfers`).

@@ -10,7 +10,10 @@ const esc = (v: string | number | null | undefined) =>
 
 const money = (minor: number) => formatMoney(minor, "ar");
 const DELIVERY: Record<string, string> = { standard: "توصيل عادي", express: "توصيل سريع" };
-const PAYMENT: Record<string, string> = { cod: "الدفع عند الاستلام", card: "بطاقة", wallet: "محفظة إلكترونية" };
+const PAYMENT: Record<string, string> = { cod: "الدفع عند الاستلام", card: "بطاقة", wallet: "محفظة إلكترونية", instapay: "إنستا باي" };
+
+/** Receipts saved locally are relative paths; make them absolute so they open from the email. */
+const proofUrl = (u: string) => (u.startsWith("/") ? `${site.url.replace(/\/$/, "")}${u}` : u);
 
 const adminOrderUrl = (orderId: string) => `${site.url.replace(/\/$/, "")}/ar/admin/orders/${orderId}`;
 
@@ -61,6 +64,11 @@ function buildOrderEmail(order: OrderDetails) {
         ${line("الشحن", order.shippingMinor > 0 ? `<span dir="ltr">${esc(money(order.shippingMinor))}</span>` : "مجاني")}
         ${line("التوصيل", esc(DELIVERY[order.deliveryMethod] ?? order.deliveryMethod))}
         ${line("الدفع", esc(PAYMENT[order.paymentMethod] ?? order.paymentMethod))}
+        ${order.prepaidMinor > 0 ? line(order.paymentMethod === "cod" ? "عربون مدفوع" : "مدفوع بالتحويل", `<span dir="ltr">${esc(money(order.prepaidMinor))}</span>`) : ""}
+        ${order.prepaidMinor > 0 ? line("المتبقي عند الاستلام", `<strong dir="ltr">${esc(money(Math.max(0, order.totalMinor - order.prepaidMinor)))}</strong>`) : ""}
+        ${order.transferChannel ? line("وسيلة التحويل", esc(PAYMENT[order.transferChannel] ?? order.transferChannel)) : ""}
+        ${order.senderPhone ? line("حوّل من رقم", `<span dir="ltr">${esc(order.senderPhone)}</span>`) : ""}
+        ${order.paymentProofUrl ? line("إيصال التحويل", `<a href="${esc(proofUrl(order.paymentProofUrl))}">فتح الإيصال</a>`) : ""}
       </table>
 
       <p style="margin:28px 0 0;text-align:center">
@@ -85,6 +93,15 @@ function buildOrderEmail(order: OrderDetails) {
     "",
     `التوصيل: ${DELIVERY[order.deliveryMethod] ?? order.deliveryMethod}`,
     `الدفع: ${PAYMENT[order.paymentMethod] ?? order.paymentMethod}`,
+    ...(order.prepaidMinor > 0
+      ? [
+          `${order.paymentMethod === "cod" ? "عربون مدفوع" : "مدفوع بالتحويل"}: ${money(order.prepaidMinor)}`,
+          `المتبقي عند الاستلام: ${money(Math.max(0, order.totalMinor - order.prepaidMinor))}`,
+          order.transferChannel ? `وسيلة التحويل: ${PAYMENT[order.transferChannel] ?? order.transferChannel}` : "",
+          order.senderPhone ? `حوّل من رقم: ${order.senderPhone}` : "",
+          order.paymentProofUrl ? `إيصال التحويل: ${proofUrl(order.paymentProofUrl)}` : "",
+        ]
+      : []),
     "",
     `فتح الطلب: ${url}`,
   ]

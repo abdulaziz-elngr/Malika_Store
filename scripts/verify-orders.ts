@@ -2,7 +2,9 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "../src/db/client";
 import { productVariants, products, orders } from "../src/db/schema";
 import { priceCart } from "../src/server/services/cart";
+import { sign } from "../src/server/auth/secret";
 import { getOrderForGuest, placeOrder } from "../src/server/services/orders";
+import { setSetting } from "../src/server/services/settings";
 
 let failed = 0;
 const check = (name: string, ok: boolean, extra?: unknown) => { console.log(`${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : "  → " + JSON.stringify(extra)}`); if (!ok) failed++; };
@@ -12,7 +14,7 @@ async function variant(slug: string, color: string, size?: string) {
     .where(sql`${products.slug} = ${slug} and ${productVariants.colorNameEn} = ${color} ${size ? sql`and ${productVariants.size} = ${size}` : sql``} and ${productVariants.stock} > 0`).limit(1);
   return r!;
 }
-const base = { name: "Test Guest", email: "guest@example.com", phone: "01155555555", governorate: "giza", city: "Dokki", line1: "5 Test Street", line2: "", notes: "", paymentMethod: "cod", saveAddress: false };
+const base = { name: "Test Guest", email: "guest@example.com", phone: "01155555555", governorate: "giza", city: "Dokki", line1: "5 Test Street", line2: "", notes: "", paymentMethod: "cod", senderPhone: "", receiptToken: "", saveAddress: false };
 
 async function main() {
   const blouse = await variant("layla-silk-blouse", "Wine"); // 1850 EGP
@@ -24,13 +26,12 @@ async function main() {
   check("no shipping until a method is picked", p.shippingMinor === null);
 
   p = await priceCart({ items: [{ variantId: scarf.id, quantity: 1 }], deliveryMethod: "standard", phone: "01099999999" });
-  check("first order → free standard shipping", p.shippingMinor === 0, p.shippingMinor);
+  check("first order is NOT free any more → 60 EGP shipping", p.shippingMinor === 6000, p.shippingMinor);
   p = await priceCart({ items: [{ variantId: scarf.id, quantity: 1 }], deliveryMethod: "standard", phone: "01012345678" });
-  check("returning phone, small cart → 60 EGP shipping", p.shippingMinor === 6000, p.shippingMinor);
+  check("small cart → 60 EGP shipping", p.shippingMinor === 6000, p.shippingMinor);
   p = await priceCart({ items: [{ variantId: blouse.id, quantity: 2 }], deliveryMethod: "standard", phone: "01012345678" });
-  check("returning phone, ≥ 3000 EGP → free shipping", p.shippingMinor === 0, p.shippingMinor);
-  p = await priceCart({ items: [{ variantId: scarf.id, quantity: 1 }], deliveryMethod: "express", phone: "01099999999" });
-  check("express always charged", p.shippingMinor === 12000, p.shippingMinor);
+  check("≥ 3000 EGP → free shipping", p.shippingMinor === 0, p.shippingMinor);
+  check("only one delivery option is quoted", Object.keys(p.shippingOptions ?? {}).join() === "standard", p.shippingOptions);
 
   p = await priceCart({ items: [{ variantId: blouse.id, quantity: 1 }], coupon: "welcome10" });
   check("WELCOME10 (case-insensitive) = 10% of 1850", p.coupon?.ok === true && p.discountMinor === 18500, p.coupon);
@@ -61,7 +62,8 @@ async function main() {
     const o = await getOrderForGuest(r1.number, "01155555555");
     check("guest tracking with correct phone", !!o && o.items.length === 1 && o.events[0]?.status === "pending", o);
     check("order totals add up", !!o && o.totalMinor === o.subtotalMinor - o.discountMinor + o.shippingMinor, o && { s: o.subtotalMinor, d: o.discountMinor, sh: o.shippingMinor, t: o.totalMinor });
-    check("first-order free shipping applied", o?.shippingMinor === 0, o?.shippingMinor);
+    check("first order pays normal shipping (no free first delivery)", !!o && o.shippingMinor === (o.subtotalMinor - o.discountMinor >= 300000 ? 0 : 6000), o?.shippingMinor);
+    check("plain cash order: nothing prepaid, no receipt", !!o && o.prepaidMinor === 0 && o.paymentProofUrl === null, o && { p: o.prepaidMinor, u: o.paymentProofUrl });
     check("guest tracking with wrong phone → null", (await getOrderForGuest(r1.number, "01000000000")) === null);
   }
 
@@ -81,6 +83,36 @@ async function main() {
 
   const c = await placeOrder({ ...base, paymentMethod: "card", deliveryMethod: "standard", coupon: "", items: [{ variantId: blouse.id, quantity: 1 }] }, null, "en");
   check("disabled payment provider rejected", !c.ok && c.code === "payment", c);
+  // ── wallet / InstaPay / cash-on-delivery deposit ──
+  const proof = sign("/uploads/receipts/2026-01-01/test.jpg");
+  const pay = { ...base, deliveryMethod: "standard" as const, coupon: "", items: [{ variantId: blouse.id, quantity: 1 }] };
+  const w0 = await placeOrder({ ...pay, paymentMethod: "wallet", transferChannel: "wallet", senderPhone: "01033333333", receiptToken: proof }, null, "en");
+  check("wallet rejected while no wallet number is configured", !w0.ok && w0.code === "payment", w0);
+
+  await setSetting(db, "payments", { walletAccounts: ["01012345678 — Vodafone Cash"], instapayAccounts: [], depositMinor: 20000 });
+  const noProof = await placeOrder({ ...pay, paymentMethod: "cod" }, null, "en");
+  check("COD with a deposit needs the receipt + sender number", !noProof.ok && noProof.code === "proof", noProof);
+  const forged = await placeOrder({ ...pay, paymentMethod: "cod", transferChannel: "wallet", senderPhone: "01033333333", receiptToken: "/uploads/receipts/evil.jpg.AAAA" }, null, "en");
+  check("unsigned receipt URL rejected", !forged.ok && forged.code === "proof", forged);
+  const badChannel = await placeOrder({ ...pay, paymentMethod: "cod", transferChannel: "instapay", senderPhone: "01033333333", receiptToken: proof }, null, "en");
+  check("InstaPay channel rejected when no InstaPay account exists", !badChannel.ok && badChannel.code === "proof", badChannel);
+  const dep = await placeOrder({ ...pay, paymentMethod: "cod", transferChannel: "wallet", senderPhone: "01033333333", receiptToken: proof }, null, "en");
+  check("COD + deposit + receipt placed", dep.ok, dep);
+  if (dep.ok) {
+    const [o] = await db.select().from(orders).where(eq(orders.seq, Number(dep.number.slice(4)))).limit(1);
+    check("deposit = 200 EGP, stored with channel, sender and receipt", o?.prepaidMinor === 20000 && o.transferChannel === "wallet" && o.senderPhone === "01033333333" && o.paymentProofUrl === "/uploads/receipts/2026-01-01/test.jpg" && o.paymentStatus === "pending", o);
+    check("order total stays the full amount (deposit is deducted from what is collected)", !!o && o.totalMinor === o.subtotalMinor - o.discountMinor + o.shippingMinor && o.totalMinor - o.prepaidMinor === o.totalMinor - 20000, o?.totalMinor);
+  }
+  const wal = await placeOrder({ ...pay, paymentMethod: "wallet", transferChannel: "wallet", senderPhone: "01033333333", receiptToken: proof }, null, "en");
+  check("wallet order placed", wal.ok, wal);
+  if (wal.ok) {
+    const [o] = await db.select().from(orders).where(eq(orders.seq, Number(wal.number.slice(4)))).limit(1);
+    check("wallet order prepays the full total", !!o && o.prepaidMinor === o.totalMinor && o.paymentStatus === "pending", o && { p: o.prepaidMinor, t: o.totalMinor });
+  }
+  await setSetting(db, "payments", { walletAccounts: [], instapayAccounts: [], depositMinor: 0 });
+  const off = await placeOrder({ ...pay, paymentMethod: "cod" }, null, "en");
+  check("deposit off → plain COD needs no receipt", off.ok, off);
+
   const count = (await db.select().from(orders)).length;
   console.log(`orders in DB: ${count}`);
   console.log(failed ? `\n${failed} FAILED` : "\nAll checks passed.");

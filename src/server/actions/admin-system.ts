@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { PaymentSettings } from "@/lib/payments";
 import { fieldErrors } from "@/lib/validation/checkout";
-import { MAX_ORDER_ALERT_EMAILS, brandFormSchema, lowStockSchema, orderAlertEmailSchema, roleFormSchema, seoFormSchema, shippingSettingsSchema, staffCreateSchema, staffPasswordSchema, staffUpdateSchema, themeContrastIssues, themeFormSchema } from "@/lib/validation/admin-system";
+import { MAX_ORDER_ALERT_EMAILS, brandFormSchema, lowStockSchema, orderAlertEmailSchema, paymentSettingsSchema, roleFormSchema, seoFormSchema, shippingSettingsSchema, staffCreateSchema, staffPasswordSchema, staffUpdateSchema, themeContrastIssues, themeFormSchema } from "@/lib/validation/admin-system";
 import { authorize } from "@/server/auth/rbac";
 import { createRole, createStaff, deleteRole, deleteStaff, resetStaffPassword, updateRole, updateStaff } from "@/server/services/admin-staff";
 import { getOrderAlertSettings, setSetting, type BrandSettings, type OrderAlertSettings, type SeoSettings, type ShippingSettings, type ThemeSettings } from "@/server/services/settings";
@@ -211,18 +212,34 @@ export async function saveShippingAction(_: ActionState, fd: FormData): Promise<
   const admin = await authorize("settings:manage_settings");
   const parsed = shippingSettingsSchema.safeParse({
     standardMinor: str(fd, "standard"),
-    expressMinor: str(fd, "express"),
     freeThresholdMinor: str(fd, "freeThreshold"),
     standardMinDays: str(fd, "standardMinDays"),
     standardMaxDays: str(fd, "standardMaxDays"),
-    expressMinDays: str(fd, "expressMinDays"),
-    expressMaxDays: str(fd, "expressMaxDays"),
   });
   if (!parsed.success) return { errors: fieldErrors(parsed.error) };
 
   const shipping: ShippingSettings = parsed.data;
   await setSetting(db, "shipping", shipping, admin.id);
-  await recordAudit(null, admin, { action: "settings.shipping", entity: "site_setting", entityId: "shipping", summary: "Updated shipping rates & windows", after: { ...shipping } });
+  await recordAudit(null, admin, { action: "settings.shipping", entity: "site_setting", entityId: "shipping", summary: "Updated delivery rate & window", after: { ...shipping } });
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export async function savePaymentsAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const admin = await authorize("settings:manage_settings");
+  const parsed = paymentSettingsSchema.safeParse({ walletAccounts: str(fd, "walletAccounts"), instapayAccounts: str(fd, "instapayAccounts"), deposit: str(fd, "deposit") });
+  if (!parsed.success) return { errors: fieldErrors(parsed.error) };
+
+  const payments: PaymentSettings = parsed.data;
+  await setSetting(db, "payments", payments, admin.id);
+  await recordAudit(null, admin, {
+    action: "settings.payments",
+    entity: "site_setting",
+    entityId: "payments",
+    summary: `Updated payment accounts (wallet ${payments.walletAccounts.length}, InstaPay ${payments.instapayAccounts.length}) and COD deposit`,
+    after: { walletAccounts: payments.walletAccounts, instapayAccounts: payments.instapayAccounts, depositMinor: payments.depositMinor },
+  });
+  // Checkout reads these live, and the order screens show the amounts.
   revalidatePath("/", "layout");
   return { ok: true };
 }

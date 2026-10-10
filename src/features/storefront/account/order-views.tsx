@@ -100,6 +100,12 @@ export async function OrderDetail({ order, heading }: { order: OrderDetails; hea
             {order.discountMinor > 0 && <div className="flex justify-between"><dt className="text-muted">{t("discount")}{order.couponCode ? ` (${order.couponCode})` : ""}</dt><dd className="text-sage-700 dark:text-sage-500">− {formatMoney(order.discountMinor, loc)}</dd></div>}
             <div className="flex justify-between"><dt className="text-muted">{t("shipping")}</dt><dd>{order.shippingMinor === 0 ? t("free") : formatMoney(order.shippingMinor, loc)}</dd></div>
             <div className="flex items-baseline justify-between border-t border-line pt-4"><dt className="uppercase tracking-[0.18em]">{t("total")}</dt><dd className="font-display text-2xl text-brand">{formatMoney(order.totalMinor, loc)}</dd></div>
+            {order.prepaidMinor > 0 && (
+              <>
+                <div className="flex justify-between"><dt className="text-muted">{order.paymentMethod === "cod" ? t("depositPaid") : t("paidByTransfer")}</dt><dd className="text-sage-700 dark:text-sage-500">− {formatMoney(order.prepaidMinor, loc)}</dd></div>
+                <div className="flex justify-between"><dt className="uppercase tracking-[0.18em]">{t("dueOnDelivery")}</dt><dd className="font-display text-xl text-brand">{formatMoney(Math.max(0, order.totalMinor - order.prepaidMinor), loc)}</dd></div>
+              </>
+            )}
           </dl>
         </section>
       </div>

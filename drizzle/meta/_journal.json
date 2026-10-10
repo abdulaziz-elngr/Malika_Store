@@ -43,6 +43,13 @@
       "when": 1791640000000,
       "tag": "0005_audiences",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791720000000,
+      "tag": "0006_payment_transfers",
+      "breakpoints": true
     }
   ]
 }

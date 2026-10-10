@@ -5,10 +5,11 @@ import { ImageSlot } from "@/features/storefront/home/image-slot";
 import { CouponBox, Totals } from "@/features/storefront/cart/cart-summary";
 import { useCart } from "@/features/storefront/cart/cart-provider";
 import { formatMoney, pick, type Loc } from "@/lib/localize";
+import type { PaymentPlan } from "@/lib/payments";
 
 type Tone = "wine" | "copper" | "cream" | "sage";
 
-export function OrderSummary() {
+export function OrderSummary({ plan, paymentMethod }: { plan: PaymentPlan; paymentMethod: string }) {
   const t = useTranslations("checkout");
   const loc = useLocale() as Loc;
   const { rows } = useCart();
@@ -36,7 +37,19 @@ export function OrderSummary() {
       </ul>
       <CouponBox />
       <Totals />
-      <p className="text-xs text-muted">{t("codNote")}</p>
+      {plan.needsTransfer && (
+        <dl className="space-y-3 border-t border-line pt-4 text-sm">
+          <div className="flex items-baseline justify-between gap-4">
+            <dt className="text-muted">{paymentMethod === "cod" ? t("summaryDeposit") : t("summaryPaidByTransfer")}</dt>
+            <dd className="text-sage-700 dark:text-sage-500">− {formatMoney(plan.prepaidMinor, loc)}</dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-4">
+            <dt className="uppercase tracking-[0.18em]">{t("summaryDue")}</dt>
+            <dd className="font-display text-2xl text-brand">{formatMoney(plan.dueMinor, loc)}</dd>
+          </div>
+        </dl>
+      )}
+      <p className="text-xs text-muted">{paymentMethod === "cod" ? t("codNote") : t("transferNote")}</p>
     </aside>
   );
 }

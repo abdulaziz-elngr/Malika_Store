@@ -3,28 +3,30 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { FormError } from "@/components/ui/field";
 import { useCart } from "@/features/storefront/cart/cart-provider";
 import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
-import { addressSchema, customerInfoSchema, deliverySchema, fieldErrors, normalizePhone, paymentSchema, type FieldErrors } from "@/lib/validation/checkout";
+import { paymentPlan } from "@/lib/payments";
+import { addressSchema, customerInfoSchema, deliverySchema, fieldErrors, normalizePhone, paymentSchema, transferSchema, type FieldErrors } from "@/lib/validation/checkout";
 import { placeOrderAction } from "@/server/actions/checkout";
 import { OrderSummary } from "./order-summary";
 import { AddressStep, DeliveryStep, InfoStep, PaymentStep, ReviewStep } from "./steps";
-import { STEPS, type CheckoutForm, type PaymentMethodOption, type SavedAddress, type StepKey } from "./types";
+import { STEPS, type CheckoutForm, type PaymentMethodOption, type PaymentSettings, type SavedAddress, type StepKey } from "./types";
 
 type Props = {
   customer: { name: string; email: string; phone: string | null } | null;
   addresses: SavedAddress[];
   methods: PaymentMethodOption[];
+  payments: PaymentSettings;
 };
 
-const schemas = { info: customerInfoSchema, address: addressSchema, delivery: deliverySchema, payment: paymentSchema } as const;
+const schemas = { info: customerInfoSchema, address: addressSchema, delivery: deliverySchema, payment: paymentSchema.extend(transferSchema.shape) } as const;
 
-export function CheckoutFlow({ customer, addresses, methods }: Props) {
+export function CheckoutFlow({ customer, addresses, methods, payments }: Props) {
   const t = useTranslations("checkout");
   const router = useRouter();
   const cart = useCart();
@@ -35,7 +37,7 @@ export function CheckoutFlow({ customer, addresses, methods }: Props) {
   const [form, setForm] = useState<CheckoutForm>({
     name: customer?.name ?? "", email: customer?.email ?? "", phone: customer?.phone ?? def?.phone ?? "",
     governorate: def?.governorate ?? "", city: def?.city ?? "", line1: def?.line1 ?? "", line2: def?.line2 ?? "", notes: def?.notes ?? "",
-    deliveryMethod: "standard", paymentMethod: firstEnabled, saveAddress: false,
+    deliveryMethod: "standard", paymentMethod: firstEnabled, transferChannel: "", senderPhone: "", receiptToken: "", receiptUrl: "", saveAddress: false,
   });
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -49,7 +51,7 @@ export function CheckoutFlow({ customer, addresses, methods }: Props) {
     setErrors((e) => (e[k] ? { ...e, [k]: "" } : e));
   }, []);
 
-  // Let the server quote shipping for the chosen delivery method and phone (first-order delivery is free).
+  // Let the server quote shipping for the chosen delivery method.
   const phoneKey = normalizePhone(form.phone);
   useEffect(() => setExtras({ deliveryMethod: form.deliveryMethod, phone: phoneKey }), [form.deliveryMethod, phoneKey, setExtras]);
 
@@ -57,11 +59,30 @@ export function CheckoutFlow({ customer, addresses, methods }: Props) {
     heading.current?.focus();
   }, [step]);
 
+  // What is paid now by transfer and what is left for the courier — mirrors the server's calculation, which is the one that counts.
+  const plan = useMemo(() => paymentPlan(form.paymentMethod, pricing?.totalMinor ?? 0, payments), [form.paymentMethod, pricing?.totalMinor, payments]);
+  // With a single channel there is nothing to choose; keep the form in sync with the plan.
+  useEffect(() => {
+    if (!plan.needsTransfer) return;
+    if (form.transferChannel && plan.channels.includes(form.transferChannel)) return;
+    const only = plan.channels.length === 1 ? plan.channels[0]! : "";
+    if (only !== form.transferChannel) setForm((f) => ({ ...f, transferChannel: only }));
+  }, [plan.needsTransfer, plan.channels, form.transferChannel]);
+
   const key: StepKey = STEPS[step]!;
   const validate = (k: Exclude<StepKey, "review">) => {
     const r = schemas[k].safeParse(form);
     const errs = r.success ? {} : fieldErrors(r.error);
-    if (k === "payment" && !methods.some((m) => m.id === form.paymentMethod && m.enabled)) errs.paymentMethod = "required";
+    if (k === "payment") {
+      if (!methods.some((m) => m.id === form.paymentMethod && m.enabled)) errs.paymentMethod = "required";
+      else if (plan.needsTransfer) {
+        const t = transferSchema.safeParse(form);
+        if (!form.transferChannel) errs.transferChannel = "required";
+        if (!form.senderPhone.trim()) errs.senderPhone = "required";
+        else if (!normalizePhone(form.senderPhone)) errs.senderPhone = "phone";
+        if (!t.success || !form.receiptToken) errs.receiptToken = "required";
+      }
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -85,6 +106,10 @@ export function CheckoutFlow({ customer, addresses, methods }: Props) {
           ...form,
           coupon: pricing?.coupon?.ok ? (coupon ?? "") : "",
           items: items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
+          // Transfer details only travel with orders that need them.
+          transferChannel: plan.needsTransfer && form.transferChannel ? form.transferChannel : undefined,
+          senderPhone: plan.needsTransfer ? form.senderPhone : "",
+          receiptToken: plan.needsTransfer ? form.receiptToken : "",
         });
       } catch {
         // Network or server failure: the order may or may not have been saved, so never leave the customer guessing.
@@ -103,6 +128,12 @@ export function CheckoutFlow({ customer, addresses, methods }: Props) {
         setErrors(res.errors);
         const bad = (["info", "address", "delivery", "payment"] as const).findIndex((k) => Object.keys(res.errors!).some((f) => f in (schemas[k] as unknown as { shape: object }).shape));
         setStep(Math.max(0, bad));
+        return;
+      }
+      if (res.code === "proof") {
+        setErrors(res.errors ?? {});
+        setFormError("orderProof");
+        setStep(STEPS.indexOf("payment"));
         return;
       }
       setFormError(res.code === "stock" ? "orderStock" : res.code === "coupon" ? "orderCoupon" : res.code === "payment" ? "orderPayment" : res.code === "rateLimited" ? "rateLimited" : "orderEmpty");
@@ -148,8 +179,8 @@ export function CheckoutFlow({ customer, addresses, methods }: Props) {
                   onPick={(a) => setForm((f) => ({ ...f, phone: a.phone, governorate: a.governorate, city: a.city, line1: a.line1, line2: a.line2 ?? "", notes: a.notes ?? "" }))} />
               )}
               {key === "delivery" && <DeliveryStep form={form} set={set} options={pricing?.shippingOptions ?? null} />}
-              {key === "payment" && <PaymentStep form={form} set={set} methods={methods} />}
-              {key === "review" && <ReviewStep form={form} onEdit={(k) => setStep(STEPS.indexOf(k))} />}
+              {key === "payment" && <PaymentStep form={form} set={set} errors={errors} methods={methods} settings={payments} plan={plan} totalMinor={pricing?.totalMinor ?? 0} />}
+              {key === "review" && <ReviewStep form={form} plan={plan} onEdit={(k) => setStep(STEPS.indexOf(k))} />}
             </motion.div>
           </AnimatePresence>
 
@@ -166,7 +197,7 @@ export function CheckoutFlow({ customer, addresses, methods }: Props) {
             )}
           </div>
         </section>
-        <OrderSummary />
+        <OrderSummary plan={plan} paymentMethod={form.paymentMethod} />
       </div>
     </Container>
   );

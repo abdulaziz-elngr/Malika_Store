@@ -121,7 +121,7 @@
   },
   "promo": {
     "eyebrow": "Limited time",
-    "title": "Complimentary delivery on your first order",
+    "title": "Free delivery on orders over EGP 3,000",
     "cta": "Shop now"
   },
   "shop": {
@@ -188,7 +188,7 @@
     "care": "Care instructions",
     "shipping": "Shipping",
     "returns": "Returns",
-    "shippingBody": "Delivery within 2–5 working days across Egypt. Free delivery on your first order.",
+    "shippingBody": "Delivery within 2–5 working days across Egypt. Free delivery on orders over EGP 3,000.",
     "returnsBody": "Unworn items with tags can be returned within 14 days of delivery.",
     "related": "You may also like",
     "sku": "SKU",
@@ -264,7 +264,9 @@
     "uploadFailed": "The upload failed. Please try again.",
     "selfDelete": "You cannot delete your own account.",
     "roleInUse": "This role is still assigned to staff accounts.",
-    "roleSystem": "This system role cannot be deleted."
+    "roleSystem": "This system role cannot be deleted.",
+    "orderProof": "We could not accept your transfer details. Please check the number and the receipt, then try again.",
+    "tooMany": "Too many entries (10 at most)."
   },
   "wishlist": {
     "added": "Saved to your wishlist",
@@ -357,16 +359,17 @@
     },
     "deliveryEta": "{min}–{max} working days",
     "free": "Free",
-    "freeShippingNote": "Standard delivery is free on your first order and on orders over EGP 3,000.",
+    "freeShippingNote": "Delivery is free on orders over EGP 3,000.",
     "payment": {
       "cod": "Cash on delivery",
       "codBody": "Pay in cash when your order arrives.",
-      "card": "Credit / debit card",
-      "cardBody": "Pay securely online.",
+      "codDepositBody": "Transfer a deposit of {deposit} now; pay the remaining {due} in cash on delivery.",
       "wallet": "Mobile wallet",
-      "walletBody": "Pay with your mobile wallet."
+      "walletBody": "Transfer the full amount from your mobile wallet and upload the receipt.",
+      "instapay": "InstaPay",
+      "instapayBody": "Transfer the full amount with InstaPay and upload the receipt.",
+      "card": "Credit / debit card"
     },
-    "comingSoon": "Coming soon",
     "choosePayment": "Please choose an available payment method.",
     "edit": "Edit",
     "termsNote": "By placing your order you agree to our <terms>Terms of service</terms> and <privacy>Privacy policy</privacy>.",
@@ -383,7 +386,41 @@
     "thanksTitle": "Thank you",
     "thanksBody": "Your order is placed. We will confirm it shortly and keep {email} updated.",
     "myOrders": "My orders",
-    "createAccount": "Create an account"
+    "createAccount": "Create an account",
+    "transfer": {
+      "title": "Amount to transfer now",
+      "depositNote": "This deposit is deducted from your order total. The remaining {due} is paid in cash on delivery.",
+      "fullNote": "Transfer the full order total, then upload the receipt below.",
+      "channel": "Transfer through",
+      "chooseChannel": "Choose how you will transfer.",
+      "sendTo": "Send the money to — {channel}",
+      "copy": "Copy",
+      "copied": "Copied",
+      "senderPhone": "The number you transferred from",
+      "senderPhoneHint": "The mobile number of the wallet / InstaPay account you sent the money from.",
+      "receipt": "Transfer receipt",
+      "receiptHint": "Upload a screenshot of the receipt (JPG, PNG or WebP, up to 5 MB).",
+      "receiptRequired": "Please upload the transfer receipt.",
+      "receiptAlt": "Transfer receipt",
+      "choose": "Choose the receipt image",
+      "uploading": "Uploading…",
+      "uploaded": "Receipt uploaded",
+      "replace": "Replace",
+      "remove": "Remove receipt",
+      "errors": {
+        "too_large": "That image is larger than 5 MB.",
+        "bad_type": "Only JPG, PNG or WebP images are allowed.",
+        "rate_limited": "Too many uploads. Please wait a few minutes and try again.",
+        "failed": "The upload failed. Please try again."
+      },
+      "reviewPaidNow": "Transferred now: {amount} ({channel})",
+      "reviewFrom": "From number: {phone}",
+      "reviewDue": "Due on delivery: {amount}"
+    },
+    "summaryDeposit": "Deposit (by transfer)",
+    "summaryPaidByTransfer": "Paid by transfer",
+    "summaryDue": "Due on delivery",
+    "transferNote": "Your order is confirmed once we have checked your transfer receipt. Prices and stock are confirmed when you place the order."
   },
   "orders": {
     "orderNumber": "Order number",
@@ -417,7 +454,10 @@
     "trackIntro": "Enter your order number and the mobile number you used at checkout.",
     "trackButton": "Track",
     "trackNotFound": "We could not find an order with these details.",
-    "trackLimited": "Too many attempts. Please try again in a few minutes."
+    "trackLimited": "Too many attempts. Please try again in a few minutes.",
+    "depositPaid": "Deposit paid by transfer",
+    "paidByTransfer": "Paid by transfer",
+    "dueOnDelivery": "Due on delivery"
   },
   "account": {
     "navLabel": "Account",
@@ -1239,17 +1279,14 @@
     "settings": {
       "eyebrow": "System",
       "title": "Site settings",
-      "intro": "Store-wide defaults: delivery pricing, delivery windows and the low-stock cut-off.",
+      "intro": "Store-wide defaults: delivery price and window, payment accounts and the low-stock cut-off.",
       "readOnly": "You can review these settings, but only accounts with the settings-management permission can change them.",
-      "shippingTitle": "Delivery rates & windows",
+      "shippingTitle": "Delivery rate & window",
       "standardFee": "Standard delivery fee (EGP)",
-      "expressFee": "Express delivery fee (EGP)",
       "freeThreshold": "Free-shipping threshold (EGP)",
       "freeThresholdHint": "Orders at or above this amount ship free.",
       "standardMinDays": "Standard — minimum days",
       "standardMaxDays": "Standard — maximum days",
-      "expressMinDays": "Express — minimum days",
-      "expressMaxDays": "Express — maximum days",
       "lowStockTitle": "Low-stock threshold",
       "threshold": "Threshold (units)",
       "thresholdHint": "The dashboard and the inventory list flag variants at or below this quantity as low stock.",
@@ -1280,6 +1317,16 @@
           "noRecipients": "Add at least one email address first.",
           "sendFailed": "The email couldn't be sent. Check your SMTP details (host, port, password)."
         }
+      },
+      "payments": {
+        "title": "Payments (wallet, InstaPay & deposit)",
+        "intro": "Customers can pay cash on delivery, or transfer to the wallet / InstaPay accounts below and upload the receipt. A method only appears at checkout once you add at least one account for it.",
+        "wallet": "Mobile wallet numbers",
+        "walletHint": "One per line, e.g. 01012345678 — Vodafone Cash. Shown to the customer exactly as written.",
+        "instapay": "InstaPay accounts",
+        "instapayHint": "One per line — an InstaPay address or the number linked to it.",
+        "deposit": "Cash-on-delivery deposit (EGP)",
+        "depositHint": "Customers who choose cash on delivery transfer this amount first and upload the receipt; it is deducted from what the courier collects. Leave empty or 0 for no deposit. A deposit needs at least one wallet or InstaPay account."
       }
     },
     "theme": {
@@ -1427,7 +1474,14 @@
       "colQty": "Qty",
       "colTotal": "Line total",
       "readNote": "No internal note on this order.",
-      "meta": "Order details"
+      "meta": "Order details",
+      "depositPaid": "Deposit paid by transfer",
+      "paidByTransfer": "Paid by transfer",
+      "dueOnDelivery": "Due on delivery",
+      "transferChannel": "Transfer channel",
+      "senderPhone": "Transferred from number",
+      "receipt": "Transfer receipt",
+      "openReceipt": "Open full size"
     },
     "customers": {
       "eyebrow": "Sales",

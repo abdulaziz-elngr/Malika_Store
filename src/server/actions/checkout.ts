@@ -10,7 +10,7 @@ import { getCustomer } from "@/server/auth/session";
 import { notifyAdminsOfNewOrder } from "@/server/services/order-alerts";
 import { placeOrder } from "@/server/services/orders";
 
-export type PlaceOrderActionResult = { ok: true; number: string; redirectUrl?: string } | { ok: false; code: "stock" | "coupon" | "payment" | "empty" | "rateLimited" | "invalid"; errors?: FieldErrors };
+export type PlaceOrderActionResult = { ok: true; number: string; redirectUrl?: string } | { ok: false; code: "stock" | "coupon" | "payment" | "proof" | "empty" | "rateLimited" | "invalid"; errors?: FieldErrors };
 
 export async function placeOrderAction(input: CheckoutInput): Promise<PlaceOrderActionResult> {
   assertAuthSecret(); // misconfiguration must fail before an order is committed, never after

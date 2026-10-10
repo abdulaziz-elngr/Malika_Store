@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_ACCOUNTS_PER_CHANNEL } from "@/lib/payments";
 import { ALL_PERMISSIONS, type PermissionKey } from "@/lib/permissions";
 import { adminPasswordSchema } from "./admin";
 
@@ -125,12 +126,9 @@ export const seoFormSchema = z.object({
 export const shippingSettingsSchema = z
   .object({
     standardMinor: z.string().trim(),
-    expressMinor: z.string().trim(),
     freeThresholdMinor: z.string().trim(),
     standardMinDays: z.string().trim(),
     standardMaxDays: z.string().trim(),
-    expressMinDays: z.string().trim(),
-    expressMaxDays: z.string().trim(),
   })
   .superRefine((s, ctx) => {
     const num = (v: string, max: number) => {
@@ -138,28 +136,49 @@ export const shippingSettingsSchema = z
       return Number.isFinite(n) && n >= 0 && n <= max ? Math.round(n) : NaN;
     };
     // Prices/threshold are entered in EGP and stored in piastres.
-    const price = { standardMinor: num(s.standardMinor.replace(/[^\d.]/g, ""), 100_000), expressMinor: num(s.expressMinor.replace(/[^\d.]/g, ""), 100_000), freeThresholdMinor: num(s.freeThresholdMinor.replace(/[^\d.]/g, ""), 1_000_000) };
+    const price = { standardMinor: num(s.standardMinor.replace(/[^\d.]/g, ""), 100_000), freeThresholdMinor: num(s.freeThresholdMinor.replace(/[^\d.]/g, ""), 1_000_000) };
     for (const [k, v] of Object.entries(price)) {
       if (Number.isNaN(v) || v <= 0) ctx.addIssue({ code: "custom", path: [k], message: k === "freeThresholdMinor" ? "number" : "money" });
     }
-    const days = { standardMinDays: num(s.standardMinDays, 60), standardMaxDays: num(s.standardMaxDays, 60), expressMinDays: num(s.expressMinDays, 60), expressMaxDays: num(s.expressMaxDays, 60) };
+    const days = { standardMinDays: num(s.standardMinDays, 60), standardMaxDays: num(s.standardMaxDays, 60) };
     for (const [k, v] of Object.entries(days)) {
       if (Number.isNaN(v) || v < 0) ctx.addIssue({ code: "custom", path: [k], message: "number" });
     }
     if (!Number.isNaN(days.standardMinDays) && !Number.isNaN(days.standardMaxDays) && days.standardMaxDays < days.standardMinDays) ctx.addIssue({ code: "custom", path: ["standardMaxDays"], message: "dateOrder" });
-    if (!Number.isNaN(days.expressMinDays) && !Number.isNaN(days.expressMaxDays) && days.expressMaxDays < days.expressMinDays) ctx.addIssue({ code: "custom", path: ["expressMaxDays"], message: "dateOrder" });
   })
   .transform((s) => {
     const egp = (v: string) => Math.round(Number(v.replace(/[^\d.]/g, "")) * 100);
     return {
       standardMinor: egp(s.standardMinor),
-      expressMinor: egp(s.expressMinor),
       freeThresholdMinor: egp(s.freeThresholdMinor),
       standardMinDays: Number(s.standardMinDays),
       standardMaxDays: Number(s.standardMaxDays),
-      expressMinDays: Number(s.expressMinDays),
-      expressMaxDays: Number(s.expressMaxDays),
     };
+  });
+
+/**
+ * Payment accounts are typed one per line. Each line is free text shown to the customer as-is
+ * (e.g. "01012345678 — Vodafone Cash"); the first word is what the "copy" button copies.
+ */
+const accountLines = (key: "walletAccounts" | "instapayAccounts") =>
+  z
+    .string()
+    .max(2000, "tooLong")
+    .transform((v, ctx) => {
+      const lines = [...new Set(v.split(/\r?\n/).map((l) => l.replace(/\s+/g, " ").trim()).filter(Boolean))];
+      if (lines.length > MAX_ACCOUNTS_PER_CHANNEL) ctx.addIssue({ code: "custom", path: [key], message: "tooMany" });
+      if (lines.some((l) => l.length > 80)) ctx.addIssue({ code: "custom", path: [key], message: "tooLong" });
+      return lines;
+    });
+
+export const paymentSettingsSchema = z
+  .object({ walletAccounts: accountLines("walletAccounts"), instapayAccounts: accountLines("instapayAccounts"), deposit: z.string().trim() })
+  .transform((s, ctx) => {
+    // Blank or 0 turns the deposit off. Entered in EGP, stored in piastres.
+    const raw = s.deposit.replace(/[^\d.]/g, "");
+    const n = raw === "" ? 0 : Number(raw);
+    if (!Number.isFinite(n) || n < 0 || n > 100_000) ctx.addIssue({ code: "custom", path: ["deposit"], message: "money" });
+    return { walletAccounts: s.walletAccounts, instapayAccounts: s.instapayAccounts, depositMinor: Math.round((Number.isFinite(n) ? n : 0) * 100) };
   });
 
 export const lowStockSchema = z.object({

@@ -3,10 +3,14 @@ import type { z } from "zod";
 import { db } from "@/db/client";
 import { addresses, couponUsages, coupons, customers, inventoryMovements, orderEvents, orderItems, orders, productVariants } from "@/db/schema";
 import type { checkoutSchema } from "@/lib/validation/checkout";
+import { paymentPlan } from "@/lib/payments";
+import { normalizePhone } from "@/lib/validation/checkout";
+import { unsign } from "@/server/auth/secret";
 import { getPaymentProvider } from "@/server/payments/registry";
 import type { SessionCustomer } from "@/server/auth/session";
 import { priceCart } from "./cart";
 import { notifyCustomer } from "./notifications";
+import { getPaymentSettings } from "./settings";
 
 export const formatOrderNumber = (seq: number) => `MLK-${seq}`;
 export const parseOrderNumber = (n: string) => {
@@ -16,16 +20,20 @@ export const parseOrderNumber = (n: string) => {
 
 export type PlaceOrderResult =
   | { ok: true; number: string; redirectUrl?: string }
-  | { ok: false; code: "stock" | "coupon" | "payment" | "empty" };
+  | { ok: false; code: "stock" | "coupon" | "payment" | "proof" | "empty"; errors?: Record<string, string> };
 
 class Abort extends Error {
-  constructor(public code: Extract<PlaceOrderResult, { ok: false }>["code"]) {
+  constructor(
+    public code: Extract<PlaceOrderResult, { ok: false }>["code"],
+    public errors?: Record<string, string>,
+  ) {
     super(code);
   }
 }
 
 export async function placeOrder(input: z.output<typeof checkoutSchema>, customer: SessionCustomer | null, locale: "ar" | "en"): Promise<PlaceOrderResult> {
-  const provider = getPaymentProvider(input.paymentMethod);
+  const paymentSettings = await getPaymentSettings();
+  const provider = getPaymentProvider(input.paymentMethod, paymentSettings);
   if (!provider) return { ok: false, code: "payment" };
 
   try {
@@ -41,6 +49,22 @@ export async function placeOrder(input: z.output<typeof checkoutSchema>, custome
       // Anything out of stock, reduced or removed means the customer must review the cart first.
       if (priced.hasIssues || priced.lines.some((l) => l.issue)) throw new Abort("stock");
       if (input.coupon && !priced.coupon?.ok) throw new Abort("coupon");
+
+      // 1b. Payment: the deposit / prepaid amount is derived from the server-side total, never from the browser.
+      // When a transfer is required, the receipt and the number it was sent from must come with the order.
+      const plan = paymentPlan(provider.id, priced.totalMinor, paymentSettings);
+      let transfer: { channel: string; senderPhone: string; proofUrl: string } | null = null;
+      if (plan.needsTransfer) {
+        const errors: Record<string, string> = {};
+        const channel = input.transferChannel && plan.channels.includes(input.transferChannel) ? input.transferChannel : null;
+        const senderPhone = normalizePhone(input.senderPhone ?? "");
+        const proofUrl = unsign(input.receiptToken || undefined);
+        if (!channel) errors.transferChannel = "required";
+        if (!senderPhone) errors.senderPhone = input.senderPhone ? "phone" : "required";
+        if (!proofUrl) errors.receiptToken = "required";
+        if (Object.keys(errors).length) throw new Abort("proof", errors);
+        transfer = { channel: channel!, senderPhone: senderPhone!, proofUrl: proofUrl! };
+      }
 
       // 2. Reserve stock atomically: the conditional update fails if someone else bought the last unit meanwhile.
       for (const l of buyable) {
@@ -70,6 +94,7 @@ export async function placeOrder(input: z.output<typeof checkoutSchema>, custome
           email: input.email, name: input.name, phone: input.phone,
           governorate: input.governorate, city: input.city, line1: input.line1, line2: input.line2 || null, notes: input.notes || null,
           deliveryMethod: input.deliveryMethod, paymentMethod: provider.id,
+          prepaidMinor: plan.prepaidMinor, transferChannel: transfer?.channel ?? null, senderPhone: transfer?.senderPhone ?? null, paymentProofUrl: transfer?.proofUrl ?? null,
           subtotalMinor: priced.subtotalMinor, shippingMinor: priced.shippingMinor ?? 0, discountMinor: priced.discountMinor, totalMinor: priced.totalMinor,
           couponId: priced.couponId, couponCode: priced.couponId && priced.coupon?.ok ? priced.coupon.code : null,
           locale,
@@ -91,7 +116,7 @@ export async function placeOrder(input: z.output<typeof checkoutSchema>, custome
       if (priced.couponId) await tx.insert(couponUsages).values({ couponId: priced.couponId, orderId: order.id, customerId: customer?.id ?? null, email: input.email, discountMinor: priced.discountMinor });
 
       // 5. Payment: the provider decides the initial payment state (cash stays pending until delivery).
-      const payment = await provider.initiate({ orderId: order.id, orderNumber: number, totalMinor: priced.totalMinor, customerEmail: input.email, locale });
+      const payment = await provider.initiate({ orderId: order.id, orderNumber: number, totalMinor: priced.totalMinor, prepaidMinor: plan.prepaidMinor, customerEmail: input.email, locale });
       if (payment.paymentStatus !== "pending" || payment.reference)
         await tx.update(orders).set({ paymentStatus: payment.paymentStatus, paymentReference: payment.reference ?? null }).where(eq(orders.id, order.id));
 
@@ -114,7 +139,7 @@ export async function placeOrder(input: z.output<typeof checkoutSchema>, custome
       return { ok: true as const, number, redirectUrl: payment.redirectUrl };
     });
   } catch (e) {
-    if (e instanceof Abort) return { ok: false, code: e.code };
+    if (e instanceof Abort) return { ok: false, code: e.code, errors: e.errors };
     throw e;
   }
 }

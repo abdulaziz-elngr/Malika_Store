@@ -114,6 +114,12 @@ export const orders = pgTable(
     paymentMethod: text("payment_method").notNull(),
     paymentStatus: paymentStatusEnum("payment_status").notNull().default("pending"),
     paymentReference: text("payment_reference"),
+    // Manual transfers (wallet / InstaPay): what was paid up-front, through which channel, from which number, and the receipt image.
+    // prepaid_minor is the full total for wallet/InstaPay orders, or the deposit for cash-on-delivery; the courier collects total − prepaid.
+    prepaidMinor: integer("prepaid_minor").notNull().default(0),
+    transferChannel: text("transfer_channel"),
+    senderPhone: text("sender_phone"),
+    paymentProofUrl: text("payment_proof_url"),
     status: orderStatusEnum("status").notNull().default("pending"),
     subtotalMinor: integer("subtotal_minor").notNull(),
     shippingMinor: integer("shipping_minor").notNull(),

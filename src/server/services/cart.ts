@@ -1,6 +1,6 @@
-import { and, asc, count, eq, inArray, ne, or } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db, type Executor } from "@/db/client";
-import { orders, productCollections, productImages, productVariants, products } from "@/db/schema";
+import { productCollections, productImages, productVariants, products } from "@/db/schema";
 import { MAX_LINE_QTY, type CartItem, type CartLine, type CartPricing } from "@/lib/cart-types";
 import { unitPrice } from "@/lib/pricing";
 import { DELIVERY_METHODS, FREE_SHIPPING_THRESHOLD_MINOR, shippingCost, type DeliveryMethodId } from "@/lib/shipping";
@@ -14,14 +14,6 @@ export type PriceInput = {
   customerId?: string | null;
   email?: string | null;
 };
-
-/** Counts earlier, non-cancelled orders by this customer or phone number. Drives the "free first delivery" promise. */
-export async function isFirstOrder(ex: Executor, who: { customerId?: string | null; phone?: string | null }) {
-  const match = [who.customerId ? eq(orders.customerId, who.customerId) : undefined, who.phone ? eq(orders.phone, who.phone) : undefined].filter((x) => !!x);
-  if (!match.length) return false;
-  const [{ n } = { n: 0 }] = await ex.select({ n: count() }).from(orders).where(and(or(...match), ne(orders.status, "cancelled")));
-  return n === 0;
-}
 
 /**
  * The single source of truth for money. The browser only sends variant ids and quantities;
@@ -94,8 +86,7 @@ export async function priceCart(input: PriceInput, ex: Executor = db): Promise<C
   let shippingMinor: number | null = null;
   let shippingOptions: Record<string, number> | null = null;
   if (buyable.length) {
-    const first = await isFirstOrder(ex, { customerId: input.customerId, phone: input.phone });
-    shippingOptions = Object.fromEntries(DELIVERY_METHODS.map((m) => [m.id, shippingCost(m.id, afterDiscount, first)]));
+    shippingOptions = Object.fromEntries(DELIVERY_METHODS.map((m) => [m.id, shippingCost(m.id, afterDiscount)]));
     if (input.deliveryMethod) shippingMinor = shippingOptions[input.deliveryMethod] ?? null;
   }
 

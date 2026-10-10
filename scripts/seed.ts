@@ -103,9 +103,9 @@ async function seedCommerce(catId: Record<string, string>, colId: Record<string,
   await db.insert(wishlistItems).values(wish.map((p) => ({ customerId: demo!.id, productId: p.id })));
 
   const customer = { id: demo!.id, email: demo!.email, name: demo!.name, phone: demo!.phone };
-  const base = { name: demo!.name, email: demo!.email, phone: "01012345678", governorate: "cairo", city: "مدينة نصر", line1: "١٢ شارع عباس العقاد، الدور الثالث", line2: "", notes: "", deliveryMethod: "standard" as const, paymentMethod: "cod", coupon: "", saveAddress: false };
+  const base = { name: demo!.name, email: demo!.email, phone: "01012345678", governorate: "cairo", city: "مدينة نصر", line1: "١٢ شارع عباس العقاد، الدور الثالث", line2: "", notes: "", deliveryMethod: "standard" as const, paymentMethod: "cod", senderPhone: "", receiptToken: "", coupon: "", saveAddress: false };
   const o1 = await placeOrder({ ...base, coupon: "WELCOME10", items: [{ variantId: await variantFor("layla-silk-blouse", "Cream"), quantity: 1 }, { variantId: await variantFor("nadia-silk-scarf", "Wine"), quantity: 2 }] }, customer, "ar");
-  const o2 = await placeOrder({ ...base, deliveryMethod: "express", items: [{ variantId: await variantFor("dalia-knit-cardigan", "Sage"), quantity: 1 }] }, customer, "ar");
+  const o2 = await placeOrder({ ...base, items: [{ variantId: await variantFor("dalia-knit-cardigan", "Sage"), quantity: 1 }] }, customer, "ar");
   if (!o1.ok || !o2.ok) throw new Error("Demo orders failed: " + JSON.stringify([o1, o2]));
 
   // Walk the demo orders through their lifecycle, with believable dates.

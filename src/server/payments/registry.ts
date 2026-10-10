@@ -1,27 +1,28 @@
+import { channelAccounts, type PaymentSettings } from "@/lib/payments";
 import type { PaymentProvider } from "./types";
 
+// Cash on delivery: the courier collects the balance, so the order stays "pending" until it is marked paid on delivery.
 const cashOnDelivery: PaymentProvider = {
   id: "cod",
-  kind: "cod",
   isEnabled: () => true,
-  // Cash is collected by the courier; the order stays "pending" until it is marked paid on delivery.
   async initiate() {
     return { paymentStatus: "pending" };
   },
 };
 
-/** Placeholder slots for gateways. They stay disabled until a real provider replaces them. */
-const unconfigured = (id: string, kind: "card" | "wallet"): PaymentProvider => ({
+/**
+ * Manual transfer (wallet / InstaPay). Available only once the store has published at least one account to pay to.
+ * The order stays "pending" until staff have checked the receipt and marked it paid in the dashboard.
+ */
+const transfer = (id: "wallet" | "instapay"): PaymentProvider => ({
   id,
-  kind,
-  isEnabled: () => false,
+  isEnabled: (s: PaymentSettings) => channelAccounts(s, id).length > 0,
   async initiate() {
-    throw new Error(`Payment provider "${id}" is not configured.`);
+    return { paymentStatus: "pending" };
   },
 });
 
-/** To add a gateway: implement PaymentProvider in its own file and replace the matching entry here. */
-const providers: PaymentProvider[] = [cashOnDelivery, unconfigured("card", "card"), unconfigured("wallet", "wallet")];
+/** To add a gateway: implement PaymentProvider in its own file and register it here. */
+const providers: PaymentProvider[] = [cashOnDelivery, transfer("wallet"), transfer("instapay")];
 
-export const listPaymentProviders = () => providers.map((p) => ({ id: p.id, kind: p.kind, enabled: p.isEnabled() }));
-export const getPaymentProvider = (id: string) => providers.find((p) => p.id === id && p.isEnabled()) ?? null;
+export const getPaymentProvider = (id: string, settings: PaymentSettings) => providers.find((p) => p.id === id && p.isEnabled(settings)) ?? null;

@@ -31,8 +31,14 @@ export const addressSchema = z.object({
 });
 export const deliverySchema = z.object({ deliveryMethod: z.enum(DELIVERY_IDS, "required") });
 export const paymentSchema = z.object({ paymentMethod: z.string().min(1, "required").max(30) });
+/** Present only when the chosen method needs a transfer (wallet / InstaPay, or a cash-on-delivery deposit). The server decides whether it is required. */
+export const transferSchema = z.object({
+  transferChannel: z.enum(["wallet", "instapay"]).optional(),
+  senderPhone: z.string().trim().max(30).optional().default(""),
+  receiptToken: z.string().max(600).optional().default(""),
+});
 
-export const checkoutSchema = customerInfoSchema.extend(addressSchema.shape).extend(deliverySchema.shape).extend(paymentSchema.shape).extend({
+export const checkoutSchema = customerInfoSchema.extend(addressSchema.shape).extend(deliverySchema.shape).extend(paymentSchema.shape).extend(transferSchema.shape).extend({
   coupon: z.string().trim().max(40).optional().default(""),
   saveAddress: z.boolean().optional().default(false),
   items: z.array(z.object({ variantId: z.uuid(), quantity: z.number().int().min(1).max(10) })).min(1, "emptyCart").max(30),

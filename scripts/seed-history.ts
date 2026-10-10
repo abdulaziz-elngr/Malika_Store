@@ -79,8 +79,8 @@ export async function seedHistory(opts: { welcomeCouponId: string; days?: number
     used.add(o.customer.id);
     const welcome = firstOrder && rnd() < 0.4;
     const discount = welcome ? Math.min(Math.floor(subtotal * 0.1), 50000) : 0;
-    const delivery = rnd() < 0.18 ? "express" : "standard";
-    const shipping = shippingCost(delivery, subtotal - discount, firstOrder);
+    const delivery = "standard" as const;
+    const shipping = shippingCost(delivery, subtotal - discount);
     const total = subtotal - discount + shipping;
 
     const r = rnd();
