@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { NextResponse } from "next/server";
+import { del, put } from "@vercel/blob";
 import { rateLimit } from "@/server/auth/rate-limit";
 import { authorize, ForbiddenError, UnauthenticatedError } from "@/server/auth/rbac";
 import { recordMedia } from "@/server/services/admin-content";
@@ -43,20 +44,31 @@ export async function POST(req: Request) {
     // The stored name never comes from the client: uuid + today's folder keeps paths clean and collision-free.
     const stamp = new Date().toISOString().slice(0, 10);
     const filename = `${randomUUID()}${spec.ext}`;
-    const dir = join(process.cwd(), "public", "uploads", stamp);
-    const abs = join(dir, filename);
-    const relUrl = `/uploads/${stamp}/${filename}`;
     const displayName = (file.name || "upload").replace(/[\\/:*?"<>|]/g, "-").slice(0, 120);
 
-    await mkdir(dir, { recursive: true });
-    await writeFile(abs, Buffer.from(await file.arrayBuffer()));
+    // Vercel's filesystem is read-only, so when a Blob token exists the file goes to Vercel Blob (public URL).
+    // Without a token (local dev) it still falls back to public/uploads.
+    const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+    let relUrl: string;
+    let abs = "";
+    if (useBlob) {
+      const blob = await put(`uploads/${stamp}/${filename}`, file, { access: "public", contentType: file.type, addRandomSuffix: false });
+      relUrl = blob.url;
+    } else {
+      const dir = join(process.cwd(), "public", "uploads", stamp);
+      abs = join(dir, filename);
+      relUrl = `/uploads/${stamp}/${filename}`;
+      await mkdir(dir, { recursive: true });
+      await writeFile(abs, Buffer.from(await file.arrayBuffer()));
+    }
 
     try {
       const created = await recordMedia(admin, { url: relUrl, name: displayName, folder, kind: spec.kind, sizeBytes: file.size });
       return NextResponse.json({ ok: true, media: { id: created.id, url: created.url, name: created.name, kind: created.kind } });
     } catch (err) {
       // Never leave an orphan file behind if the row could not be written.
-      await unlink(abs).catch(() => {});
+      if (useBlob) await del(relUrl).catch(() => {});
+      else await unlink(abs).catch(() => {});
       throw err;
     }
   } catch (err) {
