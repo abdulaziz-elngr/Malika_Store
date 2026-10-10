@@ -1,0 +1,46 @@
+{
+  "en": {
+    "admin.categories": {
+      "eyebrow": "Catalogue",
+      "title": "Categories",
+      "intro": "The browsable taxonomy of the boutique — every product sits inside exactly one category.",
+      "listTitle": "All categories",
+      "new": "New category",
+      "newTitle": "New category",
+      "editTitle": "Edit category",
+      "empty": "No categories yet",
+      "emptyBody": "Create the first category so products have a home.",
+      "slug": "URL slug",
+      "slugHint": "Leave blank to generate it from the English name.",
+      "productCount": "Products",
+      "parent": "Parent category",
+      "noParent": "Top level",
+      "order": "Order",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "tones": { "wine": "Wine", "copper": "Copper", "cream": "Cream", "sage": "Sage" }
+    }
+  },
+  "ar": {
+    "admin.categories": {
+      "eyebrow": "الفهرس",
+      "title": "الفئات",
+      "intro": "تصنيف المتجر — كل قطعة تنتمي إلى فئة واحدة بالضبط.",
+      "listTitle": "كل الفئات",
+      "new": "فئة جديدة",
+      "newTitle": "فئة جديدة",
+      "editTitle": "تعديل الفئة",
+      "empty": "لا توجد فئات بعد",
+      "emptyBody": "أنشئي أول فئة ليكون لكل قطعة مكانها.",
+      "slug": "الرابط المختصر",
+      "slugHint": "اتركيه فارغاً ليُنشأ من الاسم الإنجليزي.",
+      "productCount": "المنتجات",
+      "parent": "الفئة الأب",
+      "noParent": "الصف الأول",
+      "order": "الترتيب",
+      "moveUp": "تحريك لأعلى",
+      "moveDown": "تحريك لأسفل",
+      "tones": { "wine": "خمري", "copper": "نحاسي", "cream": "كريمي", "sage": "زيتي هادئ" }
+    }
+  }
+}

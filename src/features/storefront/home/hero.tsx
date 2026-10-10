@@ -21,6 +21,12 @@ export type HeroConfig = {
   countdownTo?: string | null; // ISO date; hidden when empty or passed
   ctaHref?: string;
   secondaryHref?: string;
+  // CMS text overrides (homepage builder) — each falls back to the brand copy.
+  eyebrow?: string;
+  title?: string;
+  subtitle?: string;
+  ctaLabel?: string;
+  secondaryLabel?: string;
 };
 
 function useCountdown(iso?: string | null) {
@@ -78,12 +84,12 @@ export function Hero({ config = {} }: { config?: HeroConfig }) {
           </motion.span>
         )}
         <div className="max-w-4xl space-y-6">
-          <p className="text-xs uppercase tracking-[0.35em] text-copper-200">{t("eyebrow")}</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-copper-200">{config.eyebrow ?? t("eyebrow")}</p>
           <h1 className="font-display text-6xl leading-[0.95] sm:text-7xl lg:text-8xl xl:text-9xl">
-            <TextReveal text={t("title")} delay={0.5} />
+            <TextReveal text={config.title ?? t("title")} delay={0.5} />
           </h1>
           <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.9 }} className="max-w-xl text-base text-cream-100/90 sm:text-lg">
-            {t("subtitle")}
+            {config.subtitle ?? t("subtitle")}
           </motion.p>
         </div>
 
@@ -101,10 +107,10 @@ export function Hero({ config = {} }: { config?: HeroConfig }) {
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.3, duration: 0.9 }} className="flex flex-wrap gap-4">
           <Magnetic>
-            <Link href={config.ctaHref ?? "/shop"} className={buttonClasses("primary", "border-cream-50 bg-cream-50 text-wine-900")}>{t("cta")}</Link>
+            <Link href={config.ctaHref ?? "/shop"} className={buttonClasses("primary", "border-cream-50 bg-cream-50 text-wine-900")}>{config.ctaLabel ?? t("cta")}</Link>
           </Magnetic>
           <Magnetic>
-            <Link href={config.secondaryHref ?? "/collections"} className={buttonClasses("secondary", "border-cream-50 text-cream-50 hover:bg-cream-50 hover:text-wine-900")}>{t("secondary")}</Link>
+            <Link href={config.secondaryHref ?? "/collections"} className={buttonClasses("secondary", "border-cream-50 text-cream-50 hover:bg-cream-50 hover:text-wine-900")}>{config.secondaryLabel ?? t("secondary")}</Link>
           </Magnetic>
         </motion.div>
       </div>

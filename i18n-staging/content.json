@@ -1,0 +1,340 @@
+{
+  "en": {
+    "admin.homepage": {
+      "eyebrow": "Storefront",
+      "title": "Homepage",
+      "intro": "Arrange the blocks that build the storefront home page, switch any of them on or off, and edit what each one shows.",
+      "dragHint": "Drag a row by its handle to reorder it, or use the up and down buttons — both do the same thing.",
+      "listTitle": "Page sections",
+      "colSection": "Section",
+      "colEnabled": "On the page",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "showSection": "Show {name} on the storefront",
+      "hideSection": "Hide {name} from the storefront",
+      "configTitle": "Settings — {name}",
+      "orderSaving": "Saving the new order…",
+      "orderSaved": "Order updated.",
+      "sections": {
+        "hero": "Hero",
+        "marquee": "Marquee strip",
+        "new_collection": "New collection",
+        "categories": "Category tiles",
+        "editorial": "Editorial story",
+        "lookbook": "Lookbook",
+        "best_sellers": "Best sellers",
+        "banner": "Promo banner",
+        "testimonials": "Testimonials",
+        "newsletter": "Newsletter sign-up"
+      },
+      "groups": {
+        "copy": "Copy",
+        "media": "Media & links",
+        "layout": "Presentation"
+      },
+      "fields": {
+        "eyebrowAr": "Eyebrow — Arabic",
+        "eyebrowEn": "Eyebrow — English",
+        "titleAr": "Heading — Arabic",
+        "titleEn": "Heading — English",
+        "bodyAr": "Text — Arabic",
+        "bodyEn": "Text — English",
+        "mobileImage": "Mobile image URL",
+        "secondaryImage": "Second image URL",
+        "videoUrl": "Background video URL",
+        "ctaLabelAr": "Button text — Arabic",
+        "ctaLabelEn": "Button text — English",
+        "ctaHref": "Button link",
+        "secondaryCtaHref": "Second button link",
+        "href": "Link",
+        "hrefHint": "Starts with / or https://.",
+        "align": "Alignment",
+        "alignStart": "Start",
+        "alignCenter": "Center",
+        "alignEnd": "End",
+        "height": "Height",
+        "heightFull": "Full screen",
+        "heightTall": "Tall",
+        "overlay": "Overlay opacity",
+        "overlayHint": "Between 0 and 0.8 — the lower the number, the clearer the picture.",
+        "countdownTo": "Countdown target",
+        "countdownHint": "A date and time shown as a live countdown; leave empty to hide it.",
+        "badge": "Badge text",
+        "badgeHint": "A short label above the heading; leave empty for none.",
+        "count": "Items to show",
+        "countHint": "Leave empty to use the section default.",
+        "animation": "Animation",
+        "animationHint": "Optional effect name, e.g. fade or rise.",
+        "layout": "Layout",
+        "layoutHint": "Optional arrangement name, e.g. split or stack.",
+        "itemsAr": "List items — Arabic",
+        "itemsEn": "List items — English",
+        "itemsHint": "One item per line, up to 12 lines."
+      }
+    },
+    "admin.banners": {
+      "eyebrow": "Promotions",
+      "title": "Banners",
+      "intro": "Campaign messages shown across the storefront — each with its own placement, tone and schedule.",
+      "listTitle": "All banners",
+      "new": "New banner",
+      "newTitle": "New banner",
+      "editTitle": "Edit banner",
+      "empty": "No banners yet",
+      "emptyBody": "Create a banner to run a campaign on the storefront.",
+      "cols": {
+        "banner": "Banner",
+        "position": "Placement",
+        "schedule": "Schedule"
+      },
+      "positions": {
+        "home": "Home",
+        "promo": "Promotion",
+        "strip": "Strip",
+        "campaign": "Campaign"
+      },
+      "startsAt": "Starts",
+      "endsAt": "Ends",
+      "always": "Always on",
+      "fields": {
+        "titleAr": "Title — Arabic",
+        "titleEn": "Title — English",
+        "bodyAr": "Text — Arabic",
+        "bodyEn": "Text — English",
+        "mobileImage": "Mobile image URL",
+        "ctaLabelAr": "Button text — Arabic",
+        "ctaLabelEn": "Button text — English",
+        "href": "Button link",
+        "hrefHint": "Required as soon as a button label is written.",
+        "sortOrder": "Sort order"
+      }
+    },
+    "admin.pages": {
+      "eyebrow": "Content",
+      "title": "Pages",
+      "intro": "Standalone pages — About, FAQ, privacy and terms — written in both languages and served at their own address.",
+      "listTitle": "All pages",
+      "new": "New page",
+      "newTitle": "New page",
+      "editTitle": "Edit page",
+      "newIntro": "Choose an address, write both titles, then the content in the two languages.",
+      "editIntro": "Every change is published to the storefront as soon as you save.",
+      "backToList": "Back to pages",
+      "empty": "No pages yet",
+      "emptyBody": "Create the first page — About or FAQ is a good place to start.",
+      "slug": "URL slug",
+      "slugHint": "Lowercase letters, numbers and dashes only.",
+      "asideTitle": "Live address",
+      "asideBody": "Shoppers open this page at the address below.",
+      "cols": {
+        "page": "Page"
+      },
+      "fields": {
+        "titleAr": "Title — Arabic",
+        "titleEn": "Title — English",
+        "bodyAr": "Body — Arabic",
+        "bodyEn": "Body — English",
+        "bodyHint": "The full text of the page — paragraph line breaks are kept."
+      }
+    },
+    "admin.navigation": {
+      "eyebrow": "Storefront",
+      "title": "Navigation",
+      "intro": "The links that make up the store's header and footer menus. They feed the storefront navigation as soon as you save.",
+      "reorderHint": "Use the arrows to change the order — the first link is the first one shoppers see.",
+      "headerHint": "Shown at the top of every page of the store.",
+      "footerHint": "Shown at the bottom of every page of the store.",
+      "tabs": {
+        "header": "Header menu",
+        "footer": "Footer menu"
+      },
+      "new": "New link",
+      "newTitle": "New menu link",
+      "editTitle": "Edit menu link",
+      "empty": "No links in this menu yet",
+      "emptyBody": "Add the first link so shoppers can find their way around.",
+      "cols": {
+        "link": "Link",
+        "href": "Address",
+        "order": "Order"
+      },
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "fields": {
+        "labelAr": "Label — Arabic",
+        "labelEn": "Label — English",
+        "menu": "Menu",
+        "hrefHint": "Starts with /, # or https://."
+      }
+    }
+  },
+  "ar": {
+    "admin.homepage": {
+      "eyebrow": "واجهة المتجر",
+      "title": "الصفحة الرئيسية",
+      "intro": "رتّب أقسام واجهة الصفحة الرئيسية، فعّلها أو أوقفها، وعدّل ما يعرضه كل قسم.",
+      "dragHint": "اسحبي أي صفّ بمقبضه لإعادة ترتيبه، أو استخدمي زرّي الأعلى والأسفل — النتيجة واحدة.",
+      "listTitle": "أقسام الصفحة",
+      "colSection": "القسم",
+      "colEnabled": "في الصفحة",
+      "moveUp": "تحريك لأعلى",
+      "moveDown": "تحريك لأسفل",
+      "showSection": "إظهار {name} في واجهة المتجر",
+      "hideSection": "إخفاء {name} عن واجهة المتجر",
+      "configTitle": "إعدادات — {name}",
+      "orderSaving": "جارٍ حفظ الترتيب الجديد…",
+      "orderSaved": "تم تحديث الترتيب.",
+      "sections": {
+        "hero": "الواجهة الرئيسية",
+        "marquee": "الشريط المتحرك",
+        "new_collection": "المجموعة الجديدة",
+        "categories": "بطاقات الفئات",
+        "editorial": "القصة التحريرية",
+        "lookbook": "ألبوم الإطلالات",
+        "best_sellers": "الأكثر مبيعاً",
+        "banner": "اللافتة الترويجية",
+        "testimonials": "آراء العميلات",
+        "newsletter": "الاشتراك في النشرة"
+      },
+      "groups": {
+        "copy": "النصوص",
+        "media": "الصور والروابط",
+        "layout": "المظهر"
+      },
+      "fields": {
+        "eyebrowAr": "السطر التمهيدي — العربية",
+        "eyebrowEn": "السطر التمهيدي — الإنجليزية",
+        "titleAr": "العنوان — العربية",
+        "titleEn": "العنوان — الإنجليزية",
+        "bodyAr": "النص — العربية",
+        "bodyEn": "النص — الإنجليزية",
+        "mobileImage": "رابط صورة الهاتف",
+        "secondaryImage": "رابط الصورة الثانية",
+        "videoUrl": "رابط الفيديو الخلفي",
+        "ctaLabelAr": "نص الزر — العربية",
+        "ctaLabelEn": "نص الزر — الإنجليزية",
+        "ctaHref": "رابط الزر",
+        "secondaryCtaHref": "رابط الزر الثاني",
+        "href": "الرابط",
+        "hrefHint": "يبدأ بـ / أو https://.",
+        "align": "المحاذاة",
+        "alignStart": "البداية",
+        "alignCenter": "الوسط",
+        "alignEnd": "النهاية",
+        "height": "الارتفاع",
+        "heightFull": "ملء الشاشة",
+        "heightTall": "طويل",
+        "overlay": "تعتيم الطبقة",
+        "overlayHint": "قيمة بين 0 و0.8 — كلما صغرت كانت الصورة أوضح.",
+        "countdownTo": "نهاية العدّاد",
+        "countdownHint": "تاريخ وساعة يظهران كعدّ تنازلي حيّ؛ اتركيهما فارغين لإخفائهما.",
+        "badge": "نص الشارة",
+        "badgeHint": "عبارة قصيرة فوق العنوان؛ اتركيها فارغة لعدم ظهورها.",
+        "count": "عدد العناصر المعروضة",
+        "countHint": "اتركيه فارغاً لاستخدام القيمة الافتراضية.",
+        "animation": "الحركة",
+        "animationHint": "اسم تأثير اختياري، مثل fade أو rise.",
+        "layout": "التخطيط",
+        "layoutHint": "اسم ترتيب اختياري، مثل split أو stack.",
+        "itemsAr": "عناصر القائمة — العربية",
+        "itemsEn": "عناصر القائمة — الإنجليزية",
+        "itemsHint": "عنصر واحد في كل سطر، بحد أقصى 12 سطراً."
+      }
+    },
+    "admin.banners": {
+      "eyebrow": "العروض",
+      "title": "اللافتات",
+      "intro": "رسائل الحملات المعروضة في واجهة المتجر — لكل واحدة موضعها ولونها وموعد خاص بها.",
+      "listTitle": "كل اللافتات",
+      "new": "لافتة جديدة",
+      "newTitle": "لافتة جديدة",
+      "editTitle": "تعديل اللافتة",
+      "empty": "لا توجد لافتات بعد",
+      "emptyBody": "أنشئي للافتة لتشغيل حملة في واجهة المتجر.",
+      "cols": {
+        "banner": "اللافتة",
+        "position": "الموضع",
+        "schedule": "الموعد"
+      },
+      "positions": {
+        "home": "الرئيسية",
+        "promo": "ترويج",
+        "strip": "شريط",
+        "campaign": "حملة"
+      },
+      "startsAt": "تبدأ",
+      "endsAt": "تنتهي",
+      "always": "دائماً ظاهرة",
+      "fields": {
+        "titleAr": "العنوان — العربية",
+        "titleEn": "العنوان — الإنجليزية",
+        "bodyAr": "النص — العربية",
+        "bodyEn": "النص — الإنجليزية",
+        "mobileImage": "رابط صورة الهاتف",
+        "ctaLabelAr": "نص الزر — العربية",
+        "ctaLabelEn": "نص الزر — الإنجليزية",
+        "href": "رابط الزر",
+        "hrefHint": "مطلوب فور كتابة نص للزر.",
+        "sortOrder": "الترتيب الرقمي"
+      }
+    },
+    "admin.pages": {
+      "eyebrow": "المحتوى",
+      "title": "الصفحات",
+      "intro": "صفحات مستقلة — عن المتجر، الأسئلة الشائعة، الخصوصية والشروط — تُكتب باللغتين وتُعرض على عنوان خاص بها.",
+      "listTitle": "كل الصفحات",
+      "new": "صفحة جديدة",
+      "newTitle": "صفحة جديدة",
+      "editTitle": "تعديل الصفحة",
+      "newIntro": "اختاري عنوان الصفحة، اكتبي العنوانين باللغتين، ثم المحتوى باللغتين.",
+      "editIntro": "كل تغيير يُنشر في واجهة المتجر فور حفظه.",
+      "backToList": "العودة إلى الصفحات",
+      "empty": "لا توجد صفحات بعد",
+      "emptyBody": "أنشئي أول صفحة — «عن المتجر» بداية جيدة.",
+      "slug": "الرابط المختصر",
+      "slugHint": "حروف صغيرة وأرقام وشرطات فقط.",
+      "asideTitle": "العنوان المباشر",
+      "asideBody": "تفتح العميلة هذه الصفحة على العنوان التالي.",
+      "cols": {
+        "page": "الصفحة"
+      },
+      "fields": {
+        "titleAr": "العنوان — العربية",
+        "titleEn": "العنوان — الإنجليزية",
+        "bodyAr": "المحتوى — العربية",
+        "bodyEn": "المحتوى — الإنجليزية",
+        "bodyHint": "نص الصفحة كاملاً — تُحفظ فواصل الأسطر."
+      }
+    },
+    "admin.navigation": {
+      "eyebrow": "واجهة المتجر",
+      "title": "القوائم",
+      "intro": "روابط تشكّل قائمة ترويسة المتجر وتذييله. تظهر في واجهة المتجر فور حفظك لها.",
+      "reorderHint": "استخدمي الأسهم لتغيير الترتيب — الرابط الأول هو أول ما تراه العميلة.",
+      "headerHint": "تظهر في أعلى كل صفحة من صفحات المتجر.",
+      "footerHint": "تظهر في أسفل كل صفحة من صفحات المتجر.",
+      "tabs": {
+        "header": "قائمة الترويسة",
+        "footer": "قائمة التذييل"
+      },
+      "new": "رابط جديد",
+      "newTitle": "رابط قائمة جديد",
+      "editTitle": "تعديل رابط القائمة",
+      "empty": "لا توجد روابط في هذه القائمة بعد",
+      "emptyBody": "أضيفي أول رابط ليصل الزبون إلى ما يبحث عنه.",
+      "cols": {
+        "link": "الرابط",
+        "href": "العنوان",
+        "order": "الترتيب"
+      },
+      "moveUp": "تحريك لأعلى",
+      "moveDown": "تحريك لأسفل",
+      "fields": {
+        "labelAr": "التسمية — العربية",
+        "labelEn": "التسمية — الإنجليزية",
+        "menu": "القائمة",
+        "hrefHint": "يبدأ بـ / أو # أو https://."
+      }
+    }
+  }
+}

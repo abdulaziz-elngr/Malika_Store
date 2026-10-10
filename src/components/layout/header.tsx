@@ -21,12 +21,16 @@ function Badge({ n }: { n: number }) {
   return <span aria-hidden className="absolute end-0.5 top-0.5 grid min-w-4 place-items-center rounded-full bg-brand px-1 text-[0.6rem] leading-4 text-brand-contrast">{n > 9 ? "9+" : n}</span>;
 }
 
-export function Header() {
+export type HeaderLink = { id: string; href: string; label: string };
+
+/** CMS menu items (label already resolved server-side) fall back to the brand's default navigation. */
+export function Header({ items }: { items?: HeaderLink[] }) {
   const t = useTranslations("nav");
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const cart = useCart();
   const wishlist = useWishlist();
+  const links: HeaderLink[] = items?.length ? items : navItems.map((i) => ({ id: i.key, href: i.href, label: t(i.key) }));
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -64,10 +68,10 @@ export function Header() {
 
           <nav aria-label={t("primary")} className="hidden lg:block">
             <ul className="flex items-center gap-9">
-              {navItems.map((item) => (
-                <li key={item.key}>
+              {links.map((item) => (
+                <li key={item.id}>
                   <Link href={item.href} className="group relative py-2 text-[0.8rem] font-medium uppercase tracking-[0.2em]">
-                    {t(item.key)}
+                    {item.label}
                     <span className="absolute inset-x-0 -bottom-0.5 h-px origin-start scale-x-0 bg-accent transition-transform duration-500 ease-luxe group-hover:scale-x-100 rtl:origin-right ltr:origin-left" />
                   </Link>
                 </li>
@@ -107,10 +111,10 @@ export function Header() {
             </Container>
             <nav aria-label={t("primary")} className="flex flex-1 flex-col justify-center px-8">
               <ul className="space-y-2">
-                {navItems.map((item, i) => (
-                  <motion.li key={item.key} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.06, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
+                {links.map((item, i) => (
+                  <motion.li key={item.id} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.06, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
                     <Link href={item.href} onClick={() => setOpen(false)} className="block py-1 font-display text-5xl text-brand">
-                      {t(item.key)}
+                      {item.label}
                     </Link>
                   </motion.li>
                 ))}
