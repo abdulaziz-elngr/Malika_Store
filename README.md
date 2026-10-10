@@ -37,6 +37,19 @@ database is created in `.data/pglite` automatically.
 
 ---
 
+## إشعارات الطلبات الجديدة بالبريد | New-order email alerts
+
+أول ما عميل يُتمّ طلب، بيوصل إيميل بكل التفاصيل (العميل، العنوان، المنتجات، الإجمالي، ولينك مباشر للطلب في الداشبورد).
+
+1. أضف بيانات SMTP في `.env` (أو في Environment Variables على الاستضافة) ثم أعد تشغيل الموقع:
+   `SMTP_HOST` · `SMTP_PORT` · `SMTP_USER` · `SMTP_PASS` (انظر `.env.example`). مع Gmail استخدم **App Password** وليس كلمة السر العادية.
+2. من الداشبورد: **الإعدادات ← إشعارات الطلبات الجديدة بالبريد** — أضف/احذف الإيميلات، فعّل/عطّل الإشعارات، وجرّب زر «إرسال رسالة تجريبية».
+3. فشل الإيميل لا يؤثر على الطلب أبداً (يُرسل بعد حفظ الطلب، والخطأ يُسجَّل في logs الخادم فقط).
+
+Every placed order emails the recipients managed in **Admin → Settings → New-order email alerts** (SMTP configured via env vars).
+
+---
+
 ## المتجر | Storefront
 
 `/` الرئيسية · `/shop` المتجر · `/men` · `/women` · `/collections` · `/products/[slug]`

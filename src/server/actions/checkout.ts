@@ -1,11 +1,13 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { after } from "next/server";
 import { getLocale } from "next-intl/server";
 import { checkoutSchema, fieldErrors, type CheckoutInput, type FieldErrors } from "@/lib/validation/checkout";
 import { rateLimit } from "@/server/auth/rate-limit";
 import { assertAuthSecret, ORDER_COOKIE, sign } from "@/server/auth/secret";
 import { getCustomer } from "@/server/auth/session";
+import { notifyAdminsOfNewOrder } from "@/server/services/order-alerts";
 import { placeOrder } from "@/server/services/orders";
 
 export type PlaceOrderActionResult = { ok: true; number: string; redirectUrl?: string } | { ok: false; code: "stock" | "coupon" | "payment" | "empty" | "rateLimited" | "invalid"; errors?: FieldErrors };
@@ -19,6 +21,9 @@ export async function placeOrderAction(input: CheckoutInput): Promise<PlaceOrder
   const [customer, locale] = await Promise.all([getCustomer(), getLocale()]);
   const res = await placeOrder(parsed.data, customer, locale === "en" ? "en" : "ar");
   if (!res.ok) return res;
+
+  // The order is committed. Email the store team after the response is sent, so a slow or failing mail server can never delay or break checkout.
+  after(() => notifyAdminsOfNewOrder(res.number));
 
   // Lets a guest see their confirmation page for a short while without an account.
   (await cookies()).set(ORDER_COOKIE, sign(res.number), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 });

@@ -1252,7 +1252,35 @@
       "expressMaxDays": "Express — maximum days",
       "lowStockTitle": "Low-stock threshold",
       "threshold": "Threshold (units)",
-      "thresholdHint": "The dashboard and the inventory list flag variants at or below this quantity as low stock."
+      "thresholdHint": "The dashboard and the inventory list flag variants at or below this quantity as low stock.",
+      "alerts": {
+        "title": "New-order email alerts",
+        "intro": "Add one or more email addresses to get an instant email with the details of every new order, the moment it is placed.",
+        "notConfigured": "Email delivery isn't set up on the server yet. Add your SMTP details (SMTP_HOST, SMTP_USER, SMTP_PASS) to the environment variables and restart the site, otherwise no emails will be sent.",
+        "enabled": "Send an email for every new order",
+        "recipients": "Alert recipients",
+        "empty": "No email addresses added yet.",
+        "addLabel": "Add an email address",
+        "add": "Add",
+        "adding": "Adding…",
+        "remove": "Remove {email}",
+        "sendTest": "Send a test email",
+        "sending": "Sending…",
+        "status": {
+          "add": "Email added.",
+          "remove": "Email removed.",
+          "toggle": "Setting saved.",
+          "test": "Test email sent. Check that it arrived (and look in your spam folder)."
+        },
+        "errors": {
+          "limit": "You've reached the maximum number of addresses (10).",
+          "notFound": "That email isn't in the list.",
+          "rateLimited": "Too many attempts. Please try again shortly.",
+          "notConfigured": "Email delivery isn't set up on the server (SMTP details missing).",
+          "noRecipients": "Add at least one email address first.",
+          "sendFailed": "The email couldn't be sent. Check your SMTP details (host, port, password)."
+        }
+      }
     },
     "theme": {
       "eyebrow": "Design",

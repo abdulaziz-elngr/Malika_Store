@@ -3,9 +3,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@/components/admin/primitives";
 import type { Locale } from "@/i18n/routing";
 import { LowStockCard } from "@/features/admin/settings/low-stock-card";
+import { OrderAlertsCard } from "@/features/admin/settings/order-alerts-card";
 import { ShippingCard } from "@/features/admin/settings/shipping-card";
 import { can, requirePermission } from "@/server/auth/rbac";
-import { getLowStockThreshold, getShippingSettings } from "@/server/services/settings";
+import { isMailConfigured } from "@/server/services/mailer";
+import { getLowStockThreshold, getOrderAlertSettings, getShippingSettings } from "@/server/services/settings";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Settings — MALIKA Admin" };
@@ -15,7 +17,7 @@ const egp = (minor: number) => String(minor / 100);
 export default async function SettingsPage({ params }: { params: Promise<{ locale: Locale }> }) {
   setRequestLocale((await params).locale);
   const admin = await requirePermission("settings:view");
-  const [t, shipping, lowStock] = await Promise.all([getTranslations("admin.settings"), getShippingSettings(), getLowStockThreshold()]);
+  const [t, shipping, lowStock, alerts] = await Promise.all([getTranslations("admin.settings"), getShippingSettings(), getLowStockThreshold(), getOrderAlertSettings()]);
   const readOnly = !can(admin, "settings:manage_settings");
 
   return (
@@ -34,6 +36,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
         }}
         readOnly={readOnly}
       />
+      <OrderAlertsCard emails={alerts.emails} enabled={alerts.enabled} mailReady={isMailConfigured()} readOnly={readOnly} />
       <LowStockCard threshold={String(lowStock)} readOnly={readOnly} />
     </div>
   );

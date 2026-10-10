@@ -172,3 +172,8 @@ export const lowStockSchema = z.object({
     return n;
   }),
 });
+
+/* ───────── order alert emails ───────── */
+
+export const orderAlertEmailSchema = z.object({ email });
+export const MAX_ORDER_ALERT_EMAILS = 10;

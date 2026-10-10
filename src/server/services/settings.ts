@@ -12,6 +12,7 @@ export type ThemeSettings = { light: ThemeMode; dark: ThemeMode; radius: number 
 export type BrandSettings = { logoUrl: string; logoDarkUrl: string; faviconUrl: string };
 export type SocialLinks = { instagram: string; tiktok: string; facebook: string; x: string };
 export type SeoSettings = { titleAr: string; titleEn: string; descriptionAr: string; descriptionEn: string; ogImage: string; robots: boolean; social: SocialLinks };
+export type OrderAlertSettings = { enabled: boolean; emails: string[] };
 export type ShippingSettings = { standardMinor: number; expressMinor: number; freeThresholdMinor: number; standardMinDays: number; standardMaxDays: number; expressMinDays: number; expressMaxDays: number };
 
 /** Defaults are the MALIKA identity: sampled from the logo, exactly what ships in globals.css. */
@@ -36,7 +37,10 @@ export const DEFAULT_SEO: SeoSettings = {
 
 export const DEFAULT_SHIPPING: ShippingSettings = { standardMinor: 6000, expressMinor: 12000, freeThresholdMinor: 300000, standardMinDays: 2, standardMaxDays: 5, expressMinDays: 1, expressMaxDays: 2 };
 
-export const SETTING_KEYS = ["theme", "brand", "seo", "shipping", "lowStockThreshold"] as const;
+/** Who is emailed the moment a customer places an order (managed from Admin → Settings). */
+export const DEFAULT_ORDER_ALERTS: OrderAlertSettings = { enabled: true, emails: [] };
+
+export const SETTING_KEYS = ["theme", "brand", "seo", "shipping", "lowStockThreshold", "orderAlerts"] as const;
 export type SettingKey = (typeof SETTING_KEYS)[number];
 
 async function readSetting(key: string): Promise<unknown> {
@@ -58,6 +62,7 @@ export const getThemeSettings = () => getSetting<ThemeSettings>("theme", DEFAULT
 export const getBrandSettings = () => getSetting<BrandSettings>("brand", DEFAULT_BRAND);
 export const getSeoSettings = () => getSetting<SeoSettings>("seo", DEFAULT_SEO);
 export const getShippingSettings = () => getSetting<ShippingSettings>("shipping", DEFAULT_SHIPPING);
+export const getOrderAlertSettings = () => getSetting<OrderAlertSettings>("orderAlerts", DEFAULT_ORDER_ALERTS);
 export const getLowStockThreshold = async () => Number(await getSetting<number>("lowStockThreshold", 5)) || 5;
 
 export async function setSetting(ex: Executor, key: SettingKey, value: unknown, updatedBy?: string | null) {

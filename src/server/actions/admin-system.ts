@@ -2,10 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { fieldErrors } from "@/lib/validation/checkout";
-import { brandFormSchema, lowStockSchema, roleFormSchema, seoFormSchema, shippingSettingsSchema, staffCreateSchema, staffPasswordSchema, staffUpdateSchema, themeContrastIssues, themeFormSchema } from "@/lib/validation/admin-system";
+import { MAX_ORDER_ALERT_EMAILS, brandFormSchema, lowStockSchema, orderAlertEmailSchema, roleFormSchema, seoFormSchema, shippingSettingsSchema, staffCreateSchema, staffPasswordSchema, staffUpdateSchema, themeContrastIssues, themeFormSchema } from "@/lib/validation/admin-system";
 import { authorize } from "@/server/auth/rbac";
 import { createRole, createStaff, deleteRole, deleteStaff, resetStaffPassword, updateRole, updateStaff } from "@/server/services/admin-staff";
-import { setSetting, type BrandSettings, type SeoSettings, type ShippingSettings, type ThemeSettings } from "@/server/services/settings";
+import { getOrderAlertSettings, setSetting, type BrandSettings, type OrderAlertSettings, type SeoSettings, type ShippingSettings, type ThemeSettings } from "@/server/services/settings";
+import { rateLimit } from "@/server/auth/rate-limit";
+import { isMailConfigured } from "@/server/services/mailer";
+import { sendOrderAlertTest } from "@/server/services/order-alerts";
 import { db } from "@/db/client";
 import { recordAudit } from "@/server/services/audit";
 import type { ActionState } from "./types";
@@ -233,4 +236,59 @@ export async function saveLowStockAction(_: ActionState, fd: FormData): Promise<
   await recordAudit(null, admin, { action: "settings.lowStock", entity: "site_setting", entityId: "lowStockThreshold", summary: `Low-stock threshold → ${parsed.data.threshold}`, after: { threshold: parsed.data.threshold } });
   revalidatePath("/[locale]/admin/inventory", "page");
   return { ok: true };
+}
+
+/* ───────── new-order email alerts ───────── */
+
+const revalidateAlerts = () => revalidatePath("/[locale]/admin/settings", "page");
+
+async function saveOrderAlerts(admin: Awaited<ReturnType<typeof authorize>>, next: OrderAlertSettings, summary: string) {
+  await setSetting(db, "orderAlerts", next, admin.id);
+  await recordAudit(null, admin, { action: "settings.orderAlerts", entity: "site_setting", entityId: "orderAlerts", summary, after: { enabled: next.enabled, emails: next.emails } });
+  revalidateAlerts();
+}
+
+export async function addOrderAlertEmailAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const admin = await authorize("settings:manage_settings");
+  const parsed = orderAlertEmailSchema.safeParse({ email: str(fd, "email") });
+  if (!parsed.success) return { errors: fieldErrors(parsed.error) };
+
+  const current = await getOrderAlertSettings();
+  if (current.emails.includes(parsed.data.email)) return { errors: { email: "duplicate" } };
+  if (current.emails.length >= MAX_ORDER_ALERT_EMAILS) return { errors: { form: "limit" } };
+
+  await saveOrderAlerts(admin, { ...current, emails: [...current.emails, parsed.data.email] }, `Added order alert email ${parsed.data.email}`);
+  return { ok: true };
+}
+
+export async function removeOrderAlertEmailAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const admin = await authorize("settings:manage_settings");
+  const email = str(fd, "email").trim().toLowerCase();
+  const current = await getOrderAlertSettings();
+  if (!current.emails.includes(email)) return { errors: { form: "notFound" } };
+
+  await saveOrderAlerts(admin, { ...current, emails: current.emails.filter((e) => e !== email) }, `Removed order alert email ${email}`);
+  return { ok: true };
+}
+
+export async function toggleOrderAlertsAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const admin = await authorize("settings:manage_settings");
+  const enabled = str(fd, "enabled") === "true";
+  const current = await getOrderAlertSettings();
+  if (current.enabled === enabled) return { ok: true };
+
+  await saveOrderAlerts(admin, { ...current, enabled }, `New-order email alerts ${enabled ? "enabled" : "disabled"}`);
+  return { ok: true };
+}
+
+export async function sendTestOrderAlertAction(): Promise<ActionState> {
+  await authorize("settings:manage_settings");
+  if (!(await rateLimit("order-alert-test", 5, 10 * 60_000))) return { errors: { form: "rateLimited" } };
+  if (!isMailConfigured()) return { errors: { form: "notConfigured" } };
+
+  const { emails } = await getOrderAlertSettings();
+  if (!emails.length) return { errors: { form: "noRecipients" } };
+
+  const res = await sendOrderAlertTest(emails);
+  return res.ok ? { ok: true } : { errors: { form: "sendFailed" } };
 }
