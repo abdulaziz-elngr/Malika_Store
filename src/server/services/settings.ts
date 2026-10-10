@@ -11,7 +11,7 @@ import { DEFAULT_PAYMENT_SETTINGS, type PaymentSettings } from "@/lib/payments";
 export type ThemeMode = { bg: string; surface: string; fg: string; muted: string; line: string; brand: string; brandContrast: string; accent: string };
 export type ThemeSettings = { light: ThemeMode; dark: ThemeMode; radius: number };
 export type BrandSettings = { logoUrl: string; logoDarkUrl: string; faviconUrl: string };
-export type SocialLinks = { instagram: string; tiktok: string; facebook: string; x: string };
+export type SocialLinks = { instagram: string; tiktok: string; facebook: string; x: string; whatsapp: string };
 export type SeoSettings = { titleAr: string; titleEn: string; descriptionAr: string; descriptionEn: string; ogImage: string; robots: boolean; social: SocialLinks };
 export type OrderAlertSettings = { enabled: boolean; emails: string[] };
 export type ShippingSettings = { standardMinor: number; freeThresholdMinor: number; standardMinDays: number; standardMaxDays: number };
@@ -33,7 +33,7 @@ export const DEFAULT_SEO: SeoSettings = {
   descriptionEn: "MALIKA is a luxury fashion house. Discover refined, feminine pieces designed with quiet confidence.",
   ogImage: "",
   robots: true,
-  social: { instagram: "", tiktok: "", facebook: "", x: "" },
+  social: { instagram: "", tiktok: "", facebook: "", x: "", whatsapp: "" },
 };
 
 export const DEFAULT_SHIPPING: ShippingSettings = { standardMinor: 6000, freeThresholdMinor: 300000, standardMinDays: 2, standardMaxDays: 5 };

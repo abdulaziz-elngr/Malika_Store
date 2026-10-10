@@ -43,6 +43,9 @@
     "faq": "FAQ",
     "privacy": "Privacy policy",
     "terms": "Terms of service",
+    "builtBy": "Website built by",
+    "whatsappChat": "Chat with us on WhatsApp",
+    "follow": "Follow us",
     "rights": "All rights reserved."
   },
   "home": {
@@ -359,7 +362,7 @@
     },
     "deliveryEta": "{min}–{max} working days",
     "free": "Free",
-    "freeShippingNote": "Delivery is free on orders over EGP 3,000.",
+    "freeShippingNote": "Delivery is free on orders of {amount} or more.",
     "payment": {
       "cod": "Cash on delivery",
       "codBody": "Pay in cash when your order arrives.",
@@ -1409,7 +1412,8 @@
         "instagram": "Instagram",
         "tiktok": "TikTok",
         "facebook": "Facebook",
-        "x": "X (Twitter)"
+        "x": "X (Twitter)",
+        "whatsapp": "WhatsApp (number)"
       },
       "previewTitle": "Search snippet",
       "previewHint": "Approximate — search engines rewrite titles when they need to.",

@@ -9,7 +9,7 @@ import { saveSeoAction } from "@/server/actions/admin-system";
 import type { ActionState } from "@/server/actions/types";
 import type { SeoSettings } from "@/server/services/settings";
 
-const SOCIALS = ["instagram", "tiktok", "facebook", "x"] as const;
+const SOCIALS = ["instagram", "tiktok", "facebook", "x", "whatsapp"] as const;
 
 /** Global search appearance + social links, with a live snippet preview. */
 export function SeoForm({ seo }: { seo: SeoSettings }) {
@@ -67,7 +67,7 @@ export function SeoForm({ seo }: { seo: SeoSettings }) {
           <div className="grid gap-5 p-5 sm:grid-cols-2">
             {SOCIALS.map((key) => (
               <Field key={key} label={t(`social.${key}` as "social.instagram")} error={state.errors?.[key]}>
-                {(p) => <input {...p} name={key} dir="ltr" defaultValue={seo.social[key]} maxLength={200} placeholder="https://…" className={inputClass} />}
+                {(p) => <input {...p} name={key} dir="ltr" defaultValue={seo.social?.[key] ?? ""} maxLength={200} placeholder={key === "whatsapp" ? "01012345678" : "https://…"} className={inputClass} />}
               </Field>
             ))}
           </div>

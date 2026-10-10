@@ -101,17 +101,17 @@ function Choice({ checked, disabled, onSelect, title, body, aside, name }: { che
   );
 }
 
-export function DeliveryStep({ form, set, options }: { form: CheckoutForm; set: StepProps["set"]; options: Record<string, number> | null }) {
+export function DeliveryStep({ form, set, options, freeThresholdMinor, window }: { form: CheckoutForm; set: StepProps["set"]; options: Record<string, number> | null; freeThresholdMinor: number; window: { minDays: number; maxDays: number } }) {
   const t = useTranslations("checkout");
   const loc = useLocale() as Loc;
   return (
     <fieldset className="space-y-3">
       <legend className="sr-only">{t("steps.delivery")}</legend>
       {DELIVERY_METHODS.map((m) => (
-        <Choice key={m.id} name="delivery" checked={form.deliveryMethod === m.id} onSelect={() => set("deliveryMethod", m.id)} title={t(`delivery.${m.id}`)} body={t("deliveryEta", { min: m.minDays, max: m.maxDays })}
+        <Choice key={m.id} name="delivery" checked={form.deliveryMethod === m.id} onSelect={() => set("deliveryMethod", m.id)} title={t(`delivery.${m.id}`)} body={t("deliveryEta", { min: window.minDays, max: window.maxDays })}
           aside={(options?.[m.id] ?? m.priceMinor) === 0 ? t("free") : formatMoney(options?.[m.id] ?? m.priceMinor, loc)} />
       ))}
-      <p className="pt-2 text-sm text-muted">{t("freeShippingNote")}</p>
+      <p className="pt-2 text-sm text-muted">{t("freeShippingNote", { amount: formatMoney(freeThresholdMinor, loc) })}</p>
     </fieldset>
   );
 }

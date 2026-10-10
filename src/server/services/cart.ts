@@ -3,8 +3,9 @@ import { db, type Executor } from "@/db/client";
 import { productCollections, productImages, productVariants, products } from "@/db/schema";
 import { MAX_LINE_QTY, type CartItem, type CartLine, type CartPricing } from "@/lib/cart-types";
 import { unitPrice } from "@/lib/pricing";
-import { DELIVERY_METHODS, FREE_SHIPPING_THRESHOLD_MINOR, shippingCost, type DeliveryMethodId } from "@/lib/shipping";
+import { DELIVERY_METHODS, shippingCost, type DeliveryMethodId } from "@/lib/shipping";
 import { evaluateCoupon } from "./coupons";
+import { getShippingSettings } from "./settings";
 
 export type PriceInput = {
   items: CartItem[];
@@ -83,10 +84,11 @@ export async function priceCart(input: PriceInput, ex: Executor = db): Promise<C
   }
 
   const afterDiscount = subtotalMinor - discountMinor;
+  const ship = await getShippingSettings();
   let shippingMinor: number | null = null;
   let shippingOptions: Record<string, number> | null = null;
   if (buyable.length) {
-    shippingOptions = Object.fromEntries(DELIVERY_METHODS.map((m) => [m.id, shippingCost(m.id, afterDiscount)]));
+    shippingOptions = Object.fromEntries(DELIVERY_METHODS.map((m) => [m.id, shippingCost(m.id, afterDiscount, ship)]));
     if (input.deliveryMethod) shippingMinor = shippingOptions[input.deliveryMethod] ?? null;
   }
 
@@ -94,7 +96,9 @@ export async function priceCart(input: PriceInput, ex: Executor = db): Promise<C
     lines, missing, subtotalMinor, discountMinor, shippingMinor, shippingOptions,
     totalMinor: afterDiscount + (shippingMinor ?? 0),
     coupon, couponId,
-    freeShippingRemainingMinor: Math.max(0, FREE_SHIPPING_THRESHOLD_MINOR - afterDiscount),
+    freeShippingRemainingMinor: Math.max(0, ship.freeThresholdMinor - afterDiscount),
+    freeShippingThresholdMinor: ship.freeThresholdMinor,
+    deliveryWindow: { minDays: ship.standardMinDays, maxDays: ship.standardMaxDays },
     hasIssues: lines.some((l) => l.issue === "out_of_stock") || missing.length > 0,
   };
 }

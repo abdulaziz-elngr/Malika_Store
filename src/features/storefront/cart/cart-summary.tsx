@@ -7,7 +7,6 @@ import { Button, buttonClasses } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { inputClass } from "@/components/ui/field";
 import { formatMoney, type Loc } from "@/lib/localize";
-import { FREE_SHIPPING_THRESHOLD_MINOR } from "@/lib/shipping";
 import { useCart } from "./cart-provider";
 
 export function FreeShippingBar() {
@@ -16,7 +15,8 @@ export function FreeShippingBar() {
   const { pricing } = useCart();
   if (!pricing || pricing.subtotalMinor === 0) return null;
   const remaining = pricing.freeShippingRemainingMinor;
-  const pct = Math.min(100, Math.round(((FREE_SHIPPING_THRESHOLD_MINOR - remaining) / FREE_SHIPPING_THRESHOLD_MINOR) * 100));
+  const threshold = pricing.freeShippingThresholdMinor || 1;
+  const pct = Math.min(100, Math.round(((threshold - remaining) / threshold) * 100));
   return (
     <div className="space-y-2">
       <p className="text-sm">{remaining > 0 ? t("freeShippingAway", { amount: formatMoney(remaining, loc) }) : t("freeShippingReached")}</p>

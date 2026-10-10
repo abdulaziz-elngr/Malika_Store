@@ -37,5 +37,7 @@ export type CartPricing = {
   totalMinor: number;
   coupon: CouponStatus | null;
   freeShippingRemainingMinor: number;
+  freeShippingThresholdMinor: number; // admin-managed
+  deliveryWindow: { minDays: number; maxDays: number }; // admin-managed
   hasIssues: boolean;
 };

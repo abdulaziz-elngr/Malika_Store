@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Loader } from "@/components/brand/loader";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
+import { WhatsAppButton } from "@/components/layout/whatsapp-button";
 import { CustomCursor } from "@/components/motion/custom-cursor";
 import { VisitBeacon } from "@/features/storefront/analytics/visit-beacon";
 import { CartDrawer } from "@/features/storefront/cart/cart-drawer";
@@ -29,6 +30,7 @@ export default async function StoreLayout({ children, params }: { children: Reac
         <Header items={toLinks(headerNav)} />
         <main id="main">{children}</main>
         <Footer items={toLinks(footerNav)} />
+        <WhatsAppButton />
         <CartDrawer />
       </CartProvider>
     </WishlistProvider>

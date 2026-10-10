@@ -119,6 +119,7 @@ export const seoFormSchema = z.object({
   tiktok: optional(200),
   facebook: optional(200),
   x: optional(200),
+  whatsapp: optional(30),
 });
 
 /* ───────── site settings ───────── */

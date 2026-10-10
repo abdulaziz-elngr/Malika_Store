@@ -195,11 +195,12 @@ export async function saveSeoAction(_: ActionState, fd: FormData): Promise<Actio
     tiktok: str(fd, "tiktok"),
     facebook: str(fd, "facebook"),
     x: str(fd, "x"),
+    whatsapp: str(fd, "whatsapp"),
   });
   if (!parsed.success) return { errors: fieldErrors(parsed.error) };
 
-  const { instagram, tiktok, facebook, x, ...rest } = parsed.data;
-  const seo: SeoSettings = { ...rest, social: { instagram, tiktok, facebook, x } };
+  const { instagram, tiktok, facebook, x, whatsapp, ...rest } = parsed.data;
+  const seo: SeoSettings = { ...rest, social: { instagram, tiktok, facebook, x, whatsapp } };
   await setSetting(db, "seo", seo, admin.id);
   await recordAudit(null, admin, { action: "seo.update", entity: "site_setting", entityId: "seo", summary: "Updated SEO settings", after: { titleEn: seo.titleEn, robots: seo.robots } });
   revalidatePath("/", "layout");

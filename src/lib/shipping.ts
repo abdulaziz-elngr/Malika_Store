@@ -10,10 +10,15 @@ export const DELIVERY_METHODS = [{ id: "standard", priceMinor: 6000, minDays: 2,
 export type DeliveryMethodId = (typeof DELIVERY_METHODS)[number]["id"];
 export const DELIVERY_IDS = DELIVERY_METHODS.map((m) => m.id) as unknown as readonly [DeliveryMethodId, ...DeliveryMethodId[]];
 
-/** Delivery is free above this order value (after discounts). */
+/** Fallback only: the live values come from Admin → Settings → Shipping (see getShippingSettings). */
 export const FREE_SHIPPING_THRESHOLD_MINOR = 300000;
 
-export function shippingCost(method: DeliveryMethodId, afterDiscountMinor: number) {
+export type ShippingConfig = { standardMinor: number; freeThresholdMinor: number };
+
+/** Delivery is free at/above the free threshold (after discounts); otherwise the admin-set standard fee. */
+export function shippingCost(method: DeliveryMethodId, afterDiscountMinor: number, cfg?: ShippingConfig) {
   const m = DELIVERY_METHODS.find((d) => d.id === method) ?? DELIVERY_METHODS[0];
-  return afterDiscountMinor >= FREE_SHIPPING_THRESHOLD_MINOR ? 0 : m.priceMinor;
+  const fee = cfg?.standardMinor ?? m.priceMinor;
+  const threshold = cfg?.freeThresholdMinor ?? FREE_SHIPPING_THRESHOLD_MINOR;
+  return afterDiscountMinor >= threshold ? 0 : fee;
 }

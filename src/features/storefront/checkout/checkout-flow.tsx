@@ -14,6 +14,7 @@ import { paymentPlan } from "@/lib/payments";
 import { addressSchema, customerInfoSchema, deliverySchema, fieldErrors, normalizePhone, paymentSchema, transferSchema, type FieldErrors } from "@/lib/validation/checkout";
 import { placeOrderAction } from "@/server/actions/checkout";
 import { OrderSummary } from "./order-summary";
+import { FREE_SHIPPING_THRESHOLD_MINOR } from "@/lib/shipping";
 import { AddressStep, DeliveryStep, InfoStep, PaymentStep, ReviewStep } from "./steps";
 import { STEPS, type CheckoutForm, type PaymentMethodOption, type PaymentSettings, type SavedAddress, type StepKey } from "./types";
 
@@ -178,7 +179,7 @@ export function CheckoutFlow({ customer, addresses, methods, payments }: Props) 
                 <AddressStep form={form} errors={errors} set={set} saved={addresses} signedIn={!!customer}
                   onPick={(a) => setForm((f) => ({ ...f, phone: a.phone, governorate: a.governorate, city: a.city, line1: a.line1, line2: a.line2 ?? "", notes: a.notes ?? "" }))} />
               )}
-              {key === "delivery" && <DeliveryStep form={form} set={set} options={pricing?.shippingOptions ?? null} />}
+              {key === "delivery" && <DeliveryStep form={form} set={set} options={pricing?.shippingOptions ?? null} freeThresholdMinor={pricing?.freeShippingThresholdMinor ?? FREE_SHIPPING_THRESHOLD_MINOR} window={pricing?.deliveryWindow ?? { minDays: 2, maxDays: 5 }} />}
               {key === "payment" && <PaymentStep form={form} set={set} errors={errors} methods={methods} settings={payments} plan={plan} totalMinor={pricing?.totalMinor ?? 0} />}
               {key === "review" && <ReviewStep form={form} plan={plan} onEdit={(k) => setStep(STEPS.indexOf(k))} />}
             </motion.div>
