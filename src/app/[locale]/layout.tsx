@@ -16,6 +16,8 @@ import { Providers } from "@/components/providers/theme-provider";
 import { ToastProvider } from "@/components/ui/toast";
 import { localeDir, routing } from "@/i18n/routing";
 import { site } from "@/lib/site";
+import { themeToCss } from "@/lib/theme-css";
+import { DEFAULT_THEME, getThemeSettings } from "@/server/services/settings";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -46,9 +48,12 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const t = await getTranslations("common");
+  // Colours saved in Admin → Appearance. If the database is unreachable the built-in MALIKA palette is used.
+  const themeCss = themeToCss(await getThemeSettings().catch(() => DEFAULT_THEME));
 
   return (
     <html lang={locale} dir={localeDir(locale)} suppressHydrationWarning>
+      <head>{themeCss ? <style id="malika-theme" dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}</head>
       <body className="min-h-dvh">
         <NextIntlClientProvider>
           <Providers>
