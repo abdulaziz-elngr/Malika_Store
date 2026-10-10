@@ -60,6 +60,15 @@ export const themeFormSchema = z.object({
   }),
 });
 
+/** Logo / favicon URLs: empty (= built-in file), an upload from this site, or an https link (Cloudinary). */
+const assetUrl = z
+  .string()
+  .trim()
+  .max(500, "tooLong")
+  .refine((v) => v === "" || /^https:\/\/[^\s"'<>]+$/.test(v) || /^\/(uploads|brand)\/[\w\-./]+$/.test(v), "invalid");
+
+export const brandFormSchema = z.object({ logoUrl: assetUrl, logoDarkUrl: assetUrl, faviconUrl: assetUrl });
+
 export type ThemeFormInput = z.input<typeof themeFormSchema>;
 
 /** WCAG relative luminance of a #rrggbb colour. */

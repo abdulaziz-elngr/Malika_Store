@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { fieldErrors } from "@/lib/validation/checkout";
-import { lowStockSchema, roleFormSchema, seoFormSchema, shippingSettingsSchema, staffCreateSchema, staffPasswordSchema, staffUpdateSchema, themeContrastIssues, themeFormSchema } from "@/lib/validation/admin-system";
+import { brandFormSchema, lowStockSchema, roleFormSchema, seoFormSchema, shippingSettingsSchema, staffCreateSchema, staffPasswordSchema, staffUpdateSchema, themeContrastIssues, themeFormSchema } from "@/lib/validation/admin-system";
 import { authorize } from "@/server/auth/rbac";
 import { createRole, createStaff, deleteRole, deleteStaff, resetStaffPassword, updateRole, updateStaff } from "@/server/services/admin-staff";
-import { setSetting, type SeoSettings, type ShippingSettings, type ThemeSettings } from "@/server/services/settings";
+import { setSetting, type BrandSettings, type SeoSettings, type ShippingSettings, type ThemeSettings } from "@/server/services/settings";
 import { db } from "@/db/client";
 import { recordAudit } from "@/server/services/audit";
 import type { ActionState } from "./types";
@@ -159,6 +159,19 @@ export async function saveThemeAction(_: ActionState, fd: FormData): Promise<Act
   };
   await setSetting(db, "theme", theme, admin.id);
   await recordAudit(null, admin, { action: "theme.update", entity: "site_setting", entityId: "theme", summary: "Updated theme colours", after: { light: theme.light, dark: theme.dark, radius: theme.radius } });
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/* ───────── brand (logo + favicon) ───────── */
+
+export async function saveBrandAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const admin = await authorize("theme:manage_settings");
+  const parsed = brandFormSchema.safeParse({ logoUrl: str(fd, "logoUrl"), logoDarkUrl: str(fd, "logoDarkUrl"), faviconUrl: str(fd, "faviconUrl") });
+  if (!parsed.success) return { errors: fieldErrors(parsed.error) };
+  const brand: BrandSettings = parsed.data;
+  await setSetting(db, "brand", brand, admin.id);
+  await recordAudit(null, admin, { action: "brand.update", entity: "site_setting", entityId: "brand", summary: "Updated logo and favicon", after: brand });
   revalidatePath("/", "layout");
   return { ok: true };
 }

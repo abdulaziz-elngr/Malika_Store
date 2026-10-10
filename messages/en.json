@@ -1291,6 +1291,28 @@
         "brandText": "Text on brand buttons",
         "darkFgOnBg": "Dark mode: text on background",
         "darkBrandText": "Dark mode: text on brand buttons"
+      },
+      "brand": {
+        "title": "Logo & favicon",
+        "subtitle": "changes apply across the whole site",
+        "logo": "Logo",
+        "logoHint": "Shown in the header, footer and loading screen. Transparent PNG works best.",
+        "logoDark": "Logo for dark mode",
+        "logoDarkHint": "Used when dark mode is on. If empty, the main logo is used.",
+        "favicon": "Favicon",
+        "faviconHint": "The small icon in the browser tab. Square PNG, at least 192×192.",
+        "choose": "Choose image",
+        "replace": "Replace",
+        "resetOne": "Use default",
+        "uploading": "Uploading…",
+        "builtIn": "Built-in MALIKA file",
+        "custom": "Custom upload",
+        "resetAll": "Reset all to MALIKA",
+        "savedNote": "Saved. The site now uses these files.",
+        "tooLarge": "The image is larger than 5 MB.",
+        "badType": "Use a PNG, JPG, WebP or AVIF image.",
+        "noPermission": "Your role cannot upload to the media library.",
+        "uploadFailed": "Upload failed. Try again."
       }
     },
     "seo": {

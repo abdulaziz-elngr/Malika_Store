@@ -9,6 +9,7 @@ import { siteSettings } from "@/db/schema";
  */
 export type ThemeMode = { bg: string; surface: string; fg: string; muted: string; line: string; brand: string; brandContrast: string; accent: string };
 export type ThemeSettings = { light: ThemeMode; dark: ThemeMode; radius: number };
+export type BrandSettings = { logoUrl: string; logoDarkUrl: string; faviconUrl: string };
 export type SocialLinks = { instagram: string; tiktok: string; facebook: string; x: string };
 export type SeoSettings = { titleAr: string; titleEn: string; descriptionAr: string; descriptionEn: string; ogImage: string; robots: boolean; social: SocialLinks };
 export type ShippingSettings = { standardMinor: number; expressMinor: number; freeThresholdMinor: number; standardMinDays: number; standardMaxDays: number; expressMinDays: number; expressMaxDays: number };
@@ -19,6 +20,9 @@ export const DEFAULT_THEME: ThemeSettings = {
   dark: { bg: "#1b0f0c", surface: "#26150f", fg: "#f7f0e6", muted: "#c9b3a4", line: "#43271f", brand: "#e8c9b6", brandContrast: "#1b0f0c", accent: "#dcbfae" },
   radius: 2,
 };
+
+/** Empty strings mean "use the built-in MALIKA files in /public". */
+export const DEFAULT_BRAND: BrandSettings = { logoUrl: "", logoDarkUrl: "", faviconUrl: "" };
 
 export const DEFAULT_SEO: SeoSettings = {
   titleAr: "MALIKA — أناقة تُعاد صياغتها",
@@ -32,7 +36,7 @@ export const DEFAULT_SEO: SeoSettings = {
 
 export const DEFAULT_SHIPPING: ShippingSettings = { standardMinor: 6000, expressMinor: 12000, freeThresholdMinor: 300000, standardMinDays: 2, standardMaxDays: 5, expressMinDays: 1, expressMaxDays: 2 };
 
-export const SETTING_KEYS = ["theme", "seo", "shipping", "lowStockThreshold"] as const;
+export const SETTING_KEYS = ["theme", "brand", "seo", "shipping", "lowStockThreshold"] as const;
 export type SettingKey = (typeof SETTING_KEYS)[number];
 
 async function readSetting(key: string): Promise<unknown> {
@@ -51,6 +55,7 @@ export const getSetting = cache(async <T>(key: SettingKey, fallback: T): Promise
 });
 
 export const getThemeSettings = () => getSetting<ThemeSettings>("theme", DEFAULT_THEME);
+export const getBrandSettings = () => getSetting<BrandSettings>("brand", DEFAULT_BRAND);
 export const getSeoSettings = () => getSetting<SeoSettings>("seo", DEFAULT_SEO);
 export const getShippingSettings = () => getSetting<ShippingSettings>("shipping", DEFAULT_SHIPPING);
 export const getLowStockThreshold = async () => Number(await getSetting<number>("lowStockThreshold", 5)) || 5;
