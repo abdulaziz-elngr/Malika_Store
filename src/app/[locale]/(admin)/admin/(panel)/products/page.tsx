@@ -1,6 +1,6 @@
 import { Package } from "lucide-react";
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@/components/admin/primitives";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { inputClass } from "@/components/ui/field";
@@ -8,6 +8,7 @@ import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { ProductsManager } from "@/features/admin/products/products-manager";
 import { Pagination } from "@/features/storefront/shop/pagination";
+import { listAudienceOptions } from "@/server/services/admin-audiences";
 import { can, requirePermission } from "@/server/auth/rbac";
 import { listCategoriesAdmin, listProductsAdmin } from "@/server/services/admin-catalog";
 
@@ -21,14 +22,16 @@ export default async function ProductsPage({ params, searchParams }: { params: P
   const sp = await searchParams;
   const q = one(sp.q).slice(0, 80);
   const status = ["draft", "published", "archived"].includes(one(sp.status)) ? one(sp.status) : "";
-  const gender = ["women", "men", "unisex"].includes(one(sp.gender)) ? one(sp.gender) : "";
+  const gender = /^[a-z0-9-]{1,40}$/.test(one(sp.gender)) ? one(sp.gender) : "";
   const category = one(sp.category).slice(0, 36);
   const page = Math.min(500, Math.max(1, Number.parseInt(one(sp.page), 10) || 1));
 
-  const [t, data, cats] = await Promise.all([
+  const [t, data, cats, auds, locale] = await Promise.all([
     getTranslations("admin.products"),
     listProductsAdmin({ q: q || undefined, status: status || undefined, gender: gender || undefined, category: category || undefined, page }),
     listCategoriesAdmin(),
+    listAudienceOptions(),
+    getLocale(),
   ]);
 
   const query: Record<string, string> = {};
@@ -81,9 +84,11 @@ export default async function ProductsPage({ params, searchParams }: { params: P
           {t("gender")}
           <select name="gender" defaultValue={gender} className={`${inputClass} h-11 min-w-36 text-sm normal-case tracking-normal text-foreground`}>
             <option value="">{t("allGenders")}</option>
-            <option value="women">{t("genders.women")}</option>
-            <option value="men">{t("genders.men")}</option>
-            <option value="unisex">{t("genders.unisex")}</option>
+            {auds.map((a) => (
+              <option key={a.slug} value={a.slug}>
+                {locale === "ar" ? a.nameAr : a.nameEn}
+              </option>
+            ))}
           </select>
         </label>
         <Button type="submit" className="min-h-11">

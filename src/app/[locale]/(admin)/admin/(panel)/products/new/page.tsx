@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { ProductForm } from "@/features/admin/products/product-form";
 import { requirePermission } from "@/server/auth/rbac";
+import { listAudienceOptions } from "@/server/services/admin-audiences";
 import { listCategoriesAdmin, listCollectionsAdmin } from "@/server/services/admin-catalog";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ export const metadata: Metadata = { title: "New product — MALIKA Admin" };
 export default async function NewProductPage({ params }: { params: Promise<{ locale: Locale }> }) {
   setRequestLocale((await params).locale);
   await requirePermission("products:create");
-  const [t, cats, cols] = await Promise.all([getTranslations("admin.products"), listCategoriesAdmin(), listCollectionsAdmin()]);
+  const [t, cats, cols, auds] = await Promise.all([getTranslations("admin.products"), listCategoriesAdmin(), listCollectionsAdmin(), listAudienceOptions()]);
 
   return (
     <div className="space-y-8">
@@ -32,6 +33,7 @@ export default async function NewProductPage({ params }: { params: Promise<{ loc
         product={null}
         categories={cats.map((c) => ({ id: c.c.id, nameEn: c.c.nameEn, nameAr: c.c.nameAr }))}
         collections={cols.map((c) => ({ id: c.c.id, nameEn: c.c.nameEn, nameAr: c.c.nameAr }))}
+        audiences={auds}
       />
     </div>
   );

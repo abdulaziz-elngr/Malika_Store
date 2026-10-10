@@ -52,7 +52,7 @@ export type ProductListItem = {
   priceMinor: number;
   salePriceMinor: number | null;
   status: "draft" | "published" | "archived";
-  gender: "women" | "men" | "unisex";
+  gender: string;
   featured: boolean;
   isNew: boolean;
   bestSeller: boolean;

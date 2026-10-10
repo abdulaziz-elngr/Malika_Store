@@ -12,7 +12,7 @@ import { ProductCard } from "./product-card";
 type Props = {
   pathname: string;
   searchParams: Record<string, string | string[] | undefined>;
-  fixedGender?: "women" | "men";
+  fixedGender?: string;
   fixedCollection?: string;
   header: React.ReactNode;
 };

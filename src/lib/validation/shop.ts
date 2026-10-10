@@ -12,7 +12,7 @@ export const shopQuerySchema = z.object({
   collection: list,
   size: list,
   color: list,
-  gender: z.enum(["women", "men", "unisex"]).optional().catch(undefined),
+  gender: z.string().trim().max(40).regex(/^[a-z0-9-]+$/).optional().catch(undefined),
   min: int,
   max: int,
   stock: z.enum(["in"]).optional().catch(undefined),

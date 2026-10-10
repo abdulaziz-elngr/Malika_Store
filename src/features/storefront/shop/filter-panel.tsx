@@ -9,6 +9,7 @@ import { cn } from "@/lib/cn";
 import { pick, type Loc } from "@/lib/localize";
 
 export type FacetData = {
+  audiences: { slug: string; nameAr: string; nameEn: string }[];
   categories: { slug: string; nameAr: string; nameEn: string }[];
   collections: { slug: string; nameAr: string; nameEn: string }[];
   sizes: string[];
@@ -90,10 +91,10 @@ export function FilterPanel({ facets, hide = [], total }: Props) {
       {!hide.includes("gender") && (
         <fieldset className={group}>
           <legend className={legend}>{t("gender")}</legend>
-          {(["women", "men", "unisex"] as const).map((g) => (
-            <label key={g} className="flex min-h-9 cursor-pointer items-center gap-3 text-sm">
-              <input type="radio" name="gender" checked={params.get("gender") === g} onChange={() => setOne("gender", g)} className="size-4 accent-[var(--brand)]" />
-              <span>{t(g)}</span>
+          {facets.audiences.map((g) => (
+            <label key={g.slug} className="flex min-h-9 cursor-pointer items-center gap-3 text-sm">
+              <input type="radio" name="gender" checked={params.get("gender") === g.slug} onChange={() => setOne("gender", g.slug)} className="size-4 accent-[var(--brand)]" />
+              <span>{pick(loc, g.nameAr, g.nameEn)}</span>
             </label>
           ))}
         </fieldset>

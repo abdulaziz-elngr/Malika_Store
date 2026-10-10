@@ -85,7 +85,7 @@ export const productFormSchema = z
     salePriceMinor: optionalMoneyInput,
     costMinor: optionalMoneyInput,
     categoryId: uuid.nullable(),
-    gender: z.enum(["women", "men", "unisex"]),
+    gender: z.string().trim().min(1, "required").max(40, "tooLong").regex(/^[a-z0-9-]+$/, "slug"),
     status: z.enum(["draft", "published", "archived"]),
     featured: flag,
     isNew: flag,
@@ -140,6 +140,14 @@ export const stockAdjustSchema = z.object({
 });
 
 /* ───────── category ───────── */
+
+export const audienceFormSchema = z.object({
+  nameAr: text(2, 60),
+  nameEn: text(2, 60),
+  slug: z.string().trim().max(40, "tooLong").regex(/^[a-z0-9-]*$/, "slug"),
+  includeUnisex: flag,
+  visible: flag,
+});
 
 export const categoryFormSchema = z.object({
   nameAr: text(2, 80),

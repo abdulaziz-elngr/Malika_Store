@@ -539,7 +539,8 @@
       "users": "Staff users",
       "roles": "Roles",
       "settings": "Settings",
-      "audit": "Audit log"
+      "audit": "Audit log",
+      "audiences": "Audiences"
     },
     "shell": {
       "close": "Close",
@@ -1529,6 +1530,28 @@
       "sources": {
         "footer": "Footer form"
       }
+    },
+    "audiences": {
+      "eyebrow": "Catalogue",
+      "title": "Audiences",
+      "intro": "Who your pieces are for — Women, Men, Kids or anything you like. Each product is assigned to one audience.",
+      "listTitle": "All audiences",
+      "new": "New audience",
+      "newTitle": "New audience",
+      "editTitle": "Edit audience",
+      "empty": "No audiences yet",
+      "emptyBody": "Create the first audience so products can be assigned to it.",
+      "slug": "URL slug",
+      "slugHint": "Letters, numbers and dashes only, e.g. kids. Leave blank to generate it from the English name. It cannot be changed later.",
+      "slugLocked": "The slug cannot be changed after creation.",
+      "productCount": "Products",
+      "order": "Order",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "includeUnisex": "Also show unisex products",
+      "includeUnisexHint": "When on, products marked for both genders also appear in this audience.",
+      "storefrontLink": "Storefront page",
+      "inUse": "Products still use this audience — move them to another one first."
     }
   },
   "homeSections": {

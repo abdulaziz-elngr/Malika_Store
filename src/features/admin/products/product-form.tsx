@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, ImageIcon, Plus, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FormError, inputClass, useFieldError } from "@/components/ui/field";
@@ -11,7 +11,6 @@ import type { ActionState } from "@/server/actions/types";
 import type { ProductAdmin } from "@/server/services/admin-catalog";
 
 const TONES = ["wine", "copper", "cream", "sage"] as const;
-const GENDERS = ["women", "men", "unisex"] as const;
 const STATUSES = ["draft", "published", "archived"] as const;
 
 type ImageRow = { id?: string; url: string; tone: string; altAr: string; altEn: string; colorHex: string | null };
@@ -23,7 +22,8 @@ const egp = (minor: number | null | undefined) => (minor == null ? "" : String(m
 
 type Option = { id: string; nameEn: string; nameAr: string };
 
-export function ProductForm({ product, categories, collections }: { product: ProductAdmin | null; categories: Option[]; collections: Option[] }) {
+export function ProductForm({ product, categories, collections, audiences }: { product: ProductAdmin | null; categories: Option[]; collections: Option[]; audiences: { slug: string; nameEn: string; nameAr: string }[] }) {
+  const locale = useLocale();
   const t = useTranslations("admin.products");
   const f = useTranslations("admin.form");
   const ferr = useFieldError();
@@ -113,9 +113,9 @@ export function ProductForm({ product, categories, collections }: { product: Pro
               <Field label={t("gender")} error={state.errors?.gender}>
                 {(p) => (
                   <select {...p} name="gender" defaultValue={product?.gender ?? "women"} className={inputClass}>
-                    {GENDERS.map((g) => (
-                      <option key={g} value={g}>
-                        {t(`genders.${g}` as "genders.women")}
+                    {audiences.map((g) => (
+                      <option key={g.slug} value={g.slug}>
+                        {locale === "ar" ? g.nameAr : g.nameEn}
                       </option>
                     ))}
                   </select>

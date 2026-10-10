@@ -17,7 +17,7 @@ export async function listProductsAdmin(f: { q?: string; status?: string; catego
     conds.push(or(ilike(products.nameAr, like), ilike(products.nameEn, like), ilike(products.sku, like), ilike(products.slug, like)));
   }
   if (f.status && ["draft", "published", "archived"].includes(f.status)) conds.push(eq(products.status, f.status as "draft"));
-  if (f.gender && ["women", "men", "unisex"].includes(f.gender)) conds.push(eq(products.gender, f.gender as "women"));
+  if (f.gender && /^[a-z0-9-]{1,40}$/.test(f.gender)) conds.push(eq(products.gender, f.gender));
   if (f.category) conds.push(eq(products.categoryId, f.category));
   const where = conds.length ? and(...conds) : undefined;
 
@@ -50,7 +50,7 @@ export type ProductInput = {
   shortAr: string; shortEn: string; descriptionAr: string; descriptionEn: string;
   materialsAr: string; materialsEn: string; careAr: string; careEn: string;
   priceMinor: number; salePriceMinor: number | null; costMinor: number | null;
-  categoryId: string | null; gender: "women" | "men" | "unisex"; status: "draft" | "published" | "archived";
+  categoryId: string | null; gender: string; status: "draft" | "published" | "archived";
   featured: boolean; isNew: boolean; bestSeller: boolean; weightGrams: number | null; tags: string[]; videoUrl: string | null;
   collectionIds: string[]; images: ProductImageInput[]; variants: VariantInput[];
   seoTitleAr: string; seoTitleEn: string; seoDescriptionAr: string; seoDescriptionEn: string;

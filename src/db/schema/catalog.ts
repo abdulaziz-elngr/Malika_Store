@@ -1,13 +1,28 @@
 import { relations } from "drizzle-orm";
 import { boolean, index, integer, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
-export const genderEnum = pgEnum("gender", ["women", "men", "unisex"]);
 export const productStatusEnum = pgEnum("product_status", ["draft", "published", "archived"]);
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 };
+
+/** Who a product is for (Women, Men, Kids…). Editable from the admin; product.gender stores the slug. */
+export const audiences = pgTable(
+  "audience",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: text("slug").notNull(),
+    nameAr: text("name_ar").notNull(),
+    nameEn: text("name_en").notNull(),
+    includeUnisex: boolean("include_unisex").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    visible: boolean("visible").notNull().default(true),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("audience_slug_idx").on(t.slug)],
+);
 
 export const categories = pgTable(
   "category",
@@ -77,7 +92,7 @@ export const products = pgTable(
     salePriceMinor: integer("sale_price_minor"),
     costMinor: integer("cost_minor"),
     categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }),
-    gender: genderEnum("gender").notNull().default("women"),
+    gender: text("gender").notNull().default("women"), // audience slug (see the audience table)
     status: productStatusEnum("status").notNull().default("draft"),
     featured: boolean("featured").notNull().default(false),
     isNew: boolean("is_new").notNull().default(false),

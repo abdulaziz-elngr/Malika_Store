@@ -1,15 +1,16 @@
 import { and, asc, count, desc, eq, exists, gte, ilike, inArray, isNotNull, lte, ne, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db/client";
-import { categories, collections, productCollections, productImages, productVariants, products } from "@/db/schema";
+import { audiences, categories, collections, productCollections, productImages, productVariants, products } from "@/db/schema";
 import type { ShopQuery } from "@/lib/validation/shop";
 
 export const PAGE_SIZE = 12;
 const effectivePrice = sql<number>`coalesce(${products.salePriceMinor}, ${products.priceMinor})`;
 
-function buildWhere(q: Partial<ShopQuery>, fixedGender?: "women" | "men"): SQL | undefined {
+function buildWhere(q: Partial<ShopQuery>, fixedGender?: string): SQL | undefined {
   const c: (SQL | undefined)[] = [eq(products.status, "published")];
   const gender = fixedGender ?? q.gender;
-  if (gender) c.push(gender === "unisex" ? eq(products.gender, "unisex") : inArray(products.gender, [gender, "unisex"]));
+  // An audience can opt in to also showing "unisex" pieces (Women/Men do by default, Kids does not).
+  if (gender) c.push(or(eq(products.gender, gender), and(eq(products.gender, "unisex"), sql`exists (select 1 from audience a where a.slug = ${gender} and a.include_unisex)`)));
   if (q.category?.length) c.push(inArray(products.categoryId, db.select({ id: categories.id }).from(categories).where(inArray(categories.slug, q.category))));
   if (q.collection?.length)
     c.push(exists(db.select({ x: sql`1` }).from(productCollections).innerJoin(collections, eq(collections.id, productCollections.collectionId)).where(and(eq(productCollections.productId, products.id), inArray(collections.slug, q.collection), eq(collections.visible, true)))));
@@ -35,7 +36,7 @@ const orderBy = (sort: ShopQuery["sort"]) =>
   : sort === "price_desc" ? [desc(effectivePrice)]
   : [desc(products.featured), desc(products.soldCount)];
 
-export async function listProducts(q: ShopQuery, fixedGender?: "women" | "men") {
+export async function listProducts(q: ShopQuery, fixedGender?: string) {
   const where = buildWhere(q, fixedGender);
   const [{ total } = { total: 0 }] = await db.select({ total: count() }).from(products).where(where);
   // Two steps: the filter subqueries reference the outer table, which the relational API aliases, so ids are selected first.
@@ -52,9 +53,10 @@ export async function listProducts(q: ShopQuery, fixedGender?: "women" | "men") 
 
 export type ProductListItem = Awaited<ReturnType<typeof listProducts>>["items"][number];
 
-export async function getFacets(fixedGender?: "women" | "men") {
+export async function getFacets(fixedGender?: string) {
   const base = buildWhere({}, fixedGender);
-  const [cats, cols, sizes, colors, [range]] = await Promise.all([
+  const [auds, cats, cols, sizes, colors, [range]] = await Promise.all([
+    db.select({ slug: audiences.slug, nameAr: audiences.nameAr, nameEn: audiences.nameEn }).from(audiences).where(eq(audiences.visible, true)).orderBy(asc(audiences.sortOrder)),
     db.select({ slug: categories.slug, nameAr: categories.nameAr, nameEn: categories.nameEn }).from(categories).where(eq(categories.visible, true)).orderBy(asc(categories.sortOrder)),
     db.select({ slug: collections.slug, nameAr: collections.nameAr, nameEn: collections.nameEn }).from(collections).where(eq(collections.visible, true)).orderBy(asc(collections.createdAt)),
     db.selectDistinct({ size: productVariants.size }).from(productVariants).innerJoin(products, eq(products.id, productVariants.productId)).where(base),
@@ -63,7 +65,7 @@ export async function getFacets(fixedGender?: "women" | "men") {
   ]);
   const order = ["XS", "S", "M", "L", "XL", "38", "40", "42", "44", "46", "One size"];
   return {
-    categories: cats, collections: cols, colors,
+    audiences: auds, categories: cats, collections: cols, colors,
     sizes: sizes.map((s) => s.size).sort((a, b) => order.indexOf(a) - order.indexOf(b)),
     priceMin: Math.floor((range?.min ?? 0) / 100), priceMax: Math.ceil((range?.max ?? 0) / 100),
   };
@@ -102,4 +104,9 @@ export async function getProductsByIds(ids: string[]) {
     with: { images: { orderBy: [asc(productImages.sortOrder)] }, variants: { orderBy: [asc(productVariants.sortOrder)] } },
   });
   return ids.map((id) => rows.find((r) => r.id === id)).filter((r): r is (typeof rows)[number] => !!r);
+}
+
+export async function getAudience(slug: string) {
+  const [row] = await db.select().from(audiences).where(and(eq(audiences.slug, slug), eq(audiences.visible, true))).limit(1);
+  return row ?? null;
 }

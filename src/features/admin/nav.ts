@@ -18,6 +18,7 @@ export const NAV_GROUPS: { key: string; items: NavDef[] }[] = [
       { key: "products", resource: "products", href: "/admin/products", icon: "products", ready: true },
       { key: "inventory", resource: "inventory", href: "/admin/inventory", icon: "inventory", ready: true },
       { key: "categories", resource: "categories", href: "/admin/categories", icon: "categories", ready: true },
+      { key: "audiences", resource: "categories", href: "/admin/audiences", icon: "categories", ready: true },
       { key: "collections", resource: "collections", href: "/admin/collections", icon: "collections", ready: true },
     ],
   },
