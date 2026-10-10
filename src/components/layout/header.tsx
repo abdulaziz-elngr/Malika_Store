@@ -106,7 +106,7 @@ export function Header({ items }: { items?: HeaderLink[] }) {
               <button type="button" className={iconBtn} onClick={() => setOpen(false)} aria-label={t("closeMenu")}>
                 <X size={22} strokeWidth={1.4} />
               </button>
-              <Logo height={40} />
+              <Logo height={50} />
               <span className="size-10" aria-hidden />
             </Container>
             <nav aria-label={t("primary")} className="flex flex-1 flex-col justify-center px-8">
