@@ -54,6 +54,9 @@ export async function RenderSection({ k, config }: { k: HomeSectionKey; config?:
     image: s("image"),
     mobileImage: s("mobileImage"),
     secondaryImage: s("secondaryImage"),
+    womenImage: s("womenImage"),
+    menImage: s("menImage"),
+    collectionsImage: s("collectionsImage"),
     tone: s("tone"),
     items: (loc === "ar" ? arr("itemsAr") ?? arr("itemsEn") : arr("itemsEn") ?? arr("itemsAr")) ?? undefined,
   };

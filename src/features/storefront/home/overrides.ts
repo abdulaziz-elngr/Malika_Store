@@ -22,6 +22,9 @@ export type SectionOverrides = {
   image?: string;
   mobileImage?: string;
   secondaryImage?: string;
+  womenImage?: string;
+  menImage?: string;
+  collectionsImage?: string;
   tone?: string;
   items?: string[];
 };

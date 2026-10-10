@@ -35,7 +35,7 @@ export default async function TrackPage({ params, searchParams }: { params: Prom
     <Container className="max-w-4xl py-14 lg:py-20">
       <h1 className="font-display text-5xl text-brand sm:text-6xl">{t("trackTitle")}</h1>
       <p className="mt-3 max-w-xl text-muted">{t("trackIntro")}</p>
-      <form method="get" className="mt-10 grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <form method="get" className="mt-10 grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
         <label className="space-y-2"><span className="block text-[0.72rem] font-medium uppercase tracking-[0.2em] text-accent">{t("orderNumber")}</span><input name="number" defaultValue={number} dir="ltr" placeholder="MLK-10291" required className={inputClass} /></label>
         <label className="space-y-2"><span className="block text-[0.72rem] font-medium uppercase tracking-[0.2em] text-accent">{t("phone")}</span><input name="phone" defaultValue={phoneRaw} dir="ltr" inputMode="tel" placeholder="01XXXXXXXXX" required className={inputClass} /></label>
         <Button type="submit">{t("trackButton")}</Button>

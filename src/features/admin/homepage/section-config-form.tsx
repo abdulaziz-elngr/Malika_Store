@@ -30,6 +30,9 @@ const FIELDS: Record<string, FieldDef> = {
   image: { kind: "url", group: "media", max: 500, ltr: true },
   mobileImage: { kind: "url", group: "media", max: 500, ltr: true },
   secondaryImage: { kind: "url", group: "media", max: 500, ltr: true },
+  womenImage: { kind: "url", group: "media", max: 500, ltr: true },
+  menImage: { kind: "url", group: "media", max: 500, ltr: true },
+  collectionsImage: { kind: "url", group: "media", max: 500, ltr: true },
   videoUrl: { kind: "url", group: "media", max: 500, ltr: true },
   ctaLabelAr: { kind: "text", group: "media", max: 60 },
   ctaLabelEn: { kind: "text", group: "media", max: 60, ltr: true },
@@ -57,7 +60,7 @@ const SECTION_FIELDS: Record<string, readonly string[]> = {
   hero: ["eyebrowAr", "eyebrowEn", "titleAr", "titleEn", "bodyAr", "bodyEn", "image", "mobileImage", "videoUrl", "ctaLabelAr", "ctaLabelEn", "ctaHref", "secondaryCtaHref", "tone", "align", "height", "overlay", "badge", "countdownTo"],
   marquee: ["itemsAr", "itemsEn", "href"],
   new_collection: ["eyebrowAr", "eyebrowEn", "titleAr", "titleEn", "bodyAr", "bodyEn", "image", "mobileImage", "ctaLabelAr", "ctaLabelEn", "ctaHref", "tone", "align", "layout"],
-  categories: ["eyebrowAr", "eyebrowEn", "titleAr", "titleEn", "bodyAr", "bodyEn", "count", "tone", "align"],
+  categories: ["eyebrowAr", "eyebrowEn", "titleAr", "titleEn", "bodyAr", "bodyEn", "womenImage", "menImage", "collectionsImage", "count", "tone", "align"],
   editorial: ["eyebrowAr", "eyebrowEn", "titleAr", "titleEn", "bodyAr", "bodyEn", "image", "secondaryImage", "ctaLabelAr", "ctaLabelEn", "ctaHref", "tone", "align", "layout", "animation"],
   lookbook: ["eyebrowAr", "eyebrowEn", "titleAr", "titleEn", "bodyAr", "bodyEn", "image", "videoUrl", "ctaLabelAr", "ctaLabelEn", "ctaHref", "tone", "align", "animation"],
   best_sellers: ["eyebrowAr", "eyebrowEn", "titleAr", "titleEn", "bodyAr", "bodyEn", "count", "tone", "align"],
@@ -100,7 +103,7 @@ export function SectionConfigForm({ row, onDone, onCancel }: { row: SectionDTO; 
   const optionLabel = (opts: Options, value: string) => {
     const i = opts.values.indexOf(value);
     const key = opts.keys[i] ?? opts.keys[0]!;
-    return opts.fromForm ? f(key as "toneWine") : t(key as "fields.alignStart");
+    return opts.fromForm ? f(key as "toneWine") : t(`fields.${key}` as "fields.alignStart");
   };
 
   /** Empties inside lists are dropped and legacy non-string values coerced, so the post always passes sectionConfigSchema. */

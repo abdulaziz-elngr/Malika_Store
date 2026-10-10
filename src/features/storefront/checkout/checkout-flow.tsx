@@ -169,7 +169,7 @@ export function CheckoutFlow({ customer, addresses, methods, payments }: Props) 
         ))}
       </ol>
 
-      <div className="grid gap-12 lg:grid-cols-[1fr_24rem] lg:gap-16">
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-16">
         <section>
           <h1 ref={heading} tabIndex={-1} className="mb-8 font-display text-4xl text-brand outline-none sm:text-5xl">{t(`steps.${key}`)}</h1>
           <AnimatePresence mode="wait" initial={false}>

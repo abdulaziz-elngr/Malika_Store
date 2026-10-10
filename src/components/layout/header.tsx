@@ -96,7 +96,7 @@ export function Header({ items }: { items?: HeaderLink[] }) {
             role="dialog"
             aria-modal="true"
             aria-label={t("primary")}
-            className="fixed inset-0 z-50 flex flex-col bg-background"
+            className="fixed inset-0 z-50 flex h-dvh flex-col bg-background"
             initial={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
             animate={{ opacity: 1, clipPath: "inset(0 0 0% 0)" }}
             exit={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
@@ -109,11 +109,11 @@ export function Header({ items }: { items?: HeaderLink[] }) {
               <Logo height={40} />
               <span className="size-10" aria-hidden />
             </Container>
-            <nav aria-label={t("primary")} className="flex flex-1 flex-col justify-center px-8">
+            <nav aria-label={t("primary")} className="flex flex-1 flex-col overflow-y-auto px-8 py-4 [justify-content:safe_center]">
               <ul className="space-y-2">
                 {links.map((item, i) => (
                   <motion.li key={item.id} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.06, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
-                    <Link href={item.href} onClick={() => setOpen(false)} className="block py-1 font-display text-5xl text-brand">
+                    <Link href={item.href} onClick={() => setOpen(false)} className="block py-1 font-display text-4xl text-brand sm:text-5xl">
                       {item.label}
                     </Link>
                   </motion.li>

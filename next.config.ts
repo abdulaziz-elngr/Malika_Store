@@ -42,8 +42,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ["@electric-sql/pglite", "pg", "nodemailer"],
   images: {
-    formats: ["image/avif", "image/webp"],
-    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
+    loader: "custom",
+    loaderFile: "./src/lib/image-loader.ts",
   },
 };
 

@@ -62,7 +62,7 @@ export default async function ProductPage({ params }: { params: Params }) {
         variants={product.variants.map((v) => ({ id: v.id, size: v.size, colorNameAr: v.colorNameAr, colorNameEn: v.colorNameEn, colorHex: v.colorHex, stock: v.stock, priceMinor: v.priceMinor }))}
       />
 
-      <section aria-labelledby="pd-details" className="mt-16 grid gap-10 border-t border-line pt-12 lg:grid-cols-[1fr_1.4fr]">
+      <section aria-labelledby="pd-details" className="mt-16 grid gap-10 border-t border-line pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <div className="space-y-4">
           <h2 id="pd-details" className="text-xs font-medium uppercase tracking-[0.25em] text-accent">{t("details")}</h2>
           <p className="text-lg text-muted">{pick(loc, product.descriptionAr, product.descriptionEn)}</p>

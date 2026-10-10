@@ -69,12 +69,12 @@ export function ProductBuyPanel({ productId, name, basePrice, salePrice, images,
         : { text: t("inStock"), tone: "text-sage-700 dark:text-sage-500" };
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
-      <div role="region" aria-label={t("gallery")} className="grid gap-4 sm:grid-cols-[5rem_1fr]">
-        <ul className="order-2 flex gap-3 sm:order-1 sm:flex-col">
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-16">
+      <div role="region" aria-label={t("gallery")} className="grid gap-4 sm:grid-cols-[5rem_minmax(0,1fr)]">
+        <ul className="order-2 flex min-w-0 gap-3 overflow-x-auto pb-1 sm:order-1 sm:flex-col sm:overflow-visible sm:pb-0">
           {gallery.map((img, i) => (
             <li key={img.id}>
-              <button type="button" onClick={() => setActive(i)} aria-label={t("view", { n: i + 1 })} aria-current={i === active} className={cn("block w-16 overflow-hidden border transition-opacity sm:w-full", i === active ? "border-brand" : "border-line opacity-70 hover:opacity-100")}>
+              <button type="button" onClick={() => setActive(i)} aria-label={t("view", { n: i + 1 })} aria-current={i === active} className={cn("block w-16 shrink-0 overflow-hidden border transition-opacity sm:w-full", i === active ? "border-brand" : "border-line opacity-70 hover:opacity-100")}>
                 <ImageSlot src={img.url} tone={img.tone as Tone} className="aspect-[3/4]" sizes="80px" />
               </button>
             </li>
@@ -91,7 +91,7 @@ export function ProductBuyPanel({ productId, name, basePrice, salePrice, images,
 
       <div className="space-y-8 lg:pt-4">
         <div className="space-y-3">
-          <p className="flex items-baseline gap-4 text-2xl">
+          <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-2xl">
             <span className={onSale ? "text-brand" : undefined}>{formatMoney(price, loc)}</span>
             {onSale && <s className="text-base text-muted">{formatMoney(unitBase, loc)}</s>}
             {onSale && <span className="bg-brand px-2 py-0.5 text-xs uppercase tracking-[0.15em] text-brand-contrast">{t("off", { percent })}</span>}
@@ -102,7 +102,7 @@ export function ProductBuyPanel({ productId, name, basePrice, salePrice, images,
           <legend className="mb-3 text-[0.72rem] font-medium uppercase tracking-[0.22em] text-accent">
             {t("color")}: <span className="text-foreground">{pick(loc, colors.find((c) => c.colorHex === color)?.colorNameAr, colors.find((c) => c.colorHex === color)?.colorNameEn)}</span>
           </legend>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             {colors.map((c) => (
               <button key={c.colorHex} type="button" aria-pressed={c.colorHex === color} aria-label={pick(loc, c.colorNameAr, c.colorNameEn)} onClick={() => { setColor(c.colorHex); setActive(0); setSize((s) => (s && variants.some((v) => v.colorHex === c.colorHex && v.size === s) ? s : null)); }} className={cn("size-9 rounded-full border-2 transition-shadow", c.colorHex === color ? "border-brand ring-2 ring-accent ring-offset-2 ring-offset-background" : "border-line")} style={{ background: c.colorHex }} />
             ))}

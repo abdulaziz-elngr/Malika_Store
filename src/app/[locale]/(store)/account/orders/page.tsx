@@ -29,7 +29,7 @@ export default async function OrdersPage({ params }: { params: Promise<{ locale:
             const number = formatOrderNumber(o.seq);
             return (
               <li key={o.id}>
-                <Link href={`/account/orders/${number}`} className="grid gap-5 border border-line p-5 transition-colors hover:border-brand sm:grid-cols-[1fr_auto] sm:items-center">
+                <Link href={`/account/orders/${number}`} className="grid gap-5 border border-line p-5 transition-colors hover:border-brand sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-2"><p dir="ltr" className="font-display text-2xl text-brand">{number}</p><StatusBadge status={o.status} /></div>
                     <p className="text-sm text-muted">{formatDate(o.createdAt, loc)} · {t("itemsCount", { count: o.items.reduce((s, i) => s + i.quantity, 0) })} · {formatMoney(o.totalMinor, loc)}</p>

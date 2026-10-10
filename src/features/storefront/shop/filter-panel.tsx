@@ -136,9 +136,9 @@ export function FilterPanel({ facets, hide = [], total }: Props) {
       <fieldset className={group}>
         <legend className={legend}>{t("price")}</legend>
         <div className="flex items-center gap-2" dir="ltr">
-          <input inputMode="numeric" aria-label={t("from")} placeholder={`${facets.priceMin}`} value={price.min} onChange={(e) => setPrice((p) => ({ ...p, min: e.target.value.replace(/\D/g, "") }))} onBlur={applyPrice} onKeyDown={(e) => e.key === "Enter" && applyPrice()} className="h-11 w-full border border-line bg-surface px-3 text-sm" />
+          <input inputMode="numeric" aria-label={t("from")} placeholder={`${facets.priceMin}`} value={price.min} onChange={(e) => setPrice((p) => ({ ...p, min: e.target.value.replace(/\D/g, "") }))} onBlur={applyPrice} onKeyDown={(e) => e.key === "Enter" && applyPrice()} className="h-11 w-full border border-line bg-surface px-3 text-base" />
           <span aria-hidden>–</span>
-          <input inputMode="numeric" aria-label={t("to")} placeholder={`${facets.priceMax}`} value={price.max} onChange={(e) => setPrice((p) => ({ ...p, max: e.target.value.replace(/\D/g, "") }))} onBlur={applyPrice} onKeyDown={(e) => e.key === "Enter" && applyPrice()} className="h-11 w-full border border-line bg-surface px-3 text-sm" />
+          <input inputMode="numeric" aria-label={t("to")} placeholder={`${facets.priceMax}`} value={price.max} onChange={(e) => setPrice((p) => ({ ...p, max: e.target.value.replace(/\D/g, "") }))} onBlur={applyPrice} onKeyDown={(e) => e.key === "Enter" && applyPrice()} className="h-11 w-full border border-line bg-surface px-3 text-base" />
         </div>
       </fieldset>
       <fieldset className={group}>

@@ -28,7 +28,7 @@ export function CartView() {
           <Link href="/shop" className={buttonClasses("primary")}>{t("continueShopping")}</Link>
         </div>
       ) : (
-        <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_24rem] lg:gap-16">
+        <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-16">
           <section aria-label={t("items")}>
             <ul className="border-t border-line"><AnimatePresence initial={false}>{rows.map((r) => <CartLineItem key={r.variantId} row={r} variant="page" />)}</AnimatePresence></ul>
             {pricingFailed && <p role="alert" className="py-4 text-sm text-brand">{t("pricingFailed")}</p>}

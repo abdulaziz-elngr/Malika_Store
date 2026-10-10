@@ -80,6 +80,24 @@ html[lang="ar"] * {
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip; /* never allow sideways scrolling; "clip" (unlike "hidden") keeps position: sticky working */
+}
+/* Touch devices: 16px minimum stops iOS Safari from zooming the page when a field is focused. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+iframe {
+  max-width: 100%;
 }
 body {
   background: var(--bg);
@@ -87,6 +105,8 @@ body {
   font-family: var(--font-body);
   font-size: 1rem;
   line-height: 1.65;
+  overflow-x: clip;
+  overflow-wrap: break-word; /* long words / emails / URLs wrap instead of overflowing on phones */
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }

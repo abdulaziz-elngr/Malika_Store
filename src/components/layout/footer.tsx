@@ -36,7 +36,7 @@ export async function Footer({ items }: { items?: { id: string; href: string; la
 
   return (
     <footer className="mt-24 border-t border-line bg-surface">
-      <Container className="grid gap-12 py-16 md:grid-cols-[1.4fr_1fr_1fr]">
+      <Container className="grid gap-12 py-16 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
         <div className="max-w-sm space-y-5">
           <Logo height={56} />
           <p className="text-muted">{t("about")}</p>

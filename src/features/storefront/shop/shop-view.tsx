@@ -28,7 +28,7 @@ export async function ShopView({ pathname, searchParams, fixedGender, fixedColle
   return (
     <Container className="py-12 lg:py-16">
       {header}
-      <div className="mt-10 grid gap-x-12 lg:grid-cols-[16rem_1fr]">
+      <div className="mt-10 grid gap-x-12 lg:grid-cols-[16rem_minmax(0,1fr)]">
         <FilterPanel facets={facets} total={total} hide={[...(fixedGender ? (["gender"] as const) : []), ...(fixedCollection ? (["collection"] as const) : [])]} />
         <div className="pt-8">
           {items.length === 0 ? (

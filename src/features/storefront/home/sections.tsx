@@ -33,9 +33,9 @@ export async function NewCollection({ o }: { o?: SectionOverrides } = {}) {
 export async function Categories({ o }: { o?: SectionOverrides } = {}) {
   const t = await getTranslations("categories");
   const items = [
-    { key: "women", href: "/women", tone: "wine" },
-    { key: "men", href: "/men", tone: "sage" },
-    { key: "collections", href: "/collections", tone: "copper" },
+    { key: "women", href: "/women", tone: "wine", image: o?.womenImage },
+    { key: "men", href: "/men", tone: "sage", image: o?.menImage },
+    { key: "collections", href: "/collections", tone: "copper", image: o?.collectionsImage },
   ] as const;
   return (
     <section className="py-12 lg:py-20">
@@ -45,7 +45,7 @@ export async function Categories({ o }: { o?: SectionOverrides } = {}) {
           {items.map((c, i) => (
             <Reveal as="li" key={c.key} delay={i * 0.1}>
               <Link href={c.href} data-cursor="view" className="group relative block aspect-[3/4] overflow-hidden text-cream-50">
-                <ImageSlot tone={c.tone} className="absolute inset-0 transition-transform duration-[1200ms] ease-luxe group-hover:scale-105" sizes="(min-width:768px) 33vw, 100vw" />
+                <ImageSlot src={c.image} alt={t(c.key)} tone={c.tone} className="absolute inset-0 transition-transform duration-[1200ms] ease-luxe group-hover:scale-105" sizes="(min-width:768px) 33vw, 100vw" />
                 <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-wine-950/60 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-6">
                   <span className="font-display text-4xl">{t(c.key)}</span>
@@ -66,7 +66,7 @@ export async function Editorial({ o }: { o?: SectionOverrides } = {}) {
   const label = o?.ctaLabel ?? t("cta");
   return (
     <section className="py-24 lg:py-32">
-      <Container className="grid items-end gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
+      <Container className="grid items-end gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-20">
         <Reveal><ImageSlot src={o?.image} alt={o?.title ?? ""} tone={toneOf(o?.tone, "cream")} className="aspect-[4/5] border border-line" sizes="(min-width:1024px) 40vw, 100vw" /></Reveal>
         <Reveal className="space-y-8 lg:pb-12">
           <SectionHeading eyebrow={o?.eyebrow ?? t("eyebrow")} title={o?.title ?? t("title")} />
