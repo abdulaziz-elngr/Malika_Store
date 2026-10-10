@@ -63,7 +63,7 @@ export function Header({ items }: { items?: HeaderLink[] }) {
           </button>
 
           <Link href="/" aria-label="MALIKA" className="max-lg:absolute max-lg:start-1/2 max-lg:-translate-x-1/2 rtl:max-lg:translate-x-1/2">
-            <Logo height={scrolled ? 36 : 44} priority className="transition-all duration-500 ease-luxe" />
+            <Logo height={scrolled ? 48 : 64}  priority className="transition-all duration-500 ease-luxe" />
           </Link>
 
           <nav aria-label={t("primary")} className="hidden lg:block">
@@ -106,7 +106,7 @@ export function Header({ items }: { items?: HeaderLink[] }) {
               <button type="button" className={iconBtn} onClick={() => setOpen(false)} aria-label={t("closeMenu")}>
                 <X size={22} strokeWidth={1.4} />
               </button>
-              <Logo height={50} />
+              <Logo height={40} />
               <span className="size-10" aria-hidden />
             </Container>
             <nav aria-label={t("primary")} className="flex flex-1 flex-col justify-center px-8">
