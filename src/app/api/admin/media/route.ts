@@ -2,10 +2,10 @@ import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { NextResponse } from "next/server";
-import { del, put } from "@vercel/blob";
 import { rateLimit } from "@/server/auth/rate-limit";
 import { authorize, ForbiddenError, UnauthenticatedError } from "@/server/auth/rbac";
 import { recordMedia } from "@/server/services/admin-content";
+import { cloudinaryEnabled, deleteFromCloudinary, uploadToCloudinary } from "@/server/cloudinary";
 
 /** Hard cap for the boutique's media: photography and short lookbook clips only. */
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -43,17 +43,17 @@ export async function POST(req: Request) {
 
     // The stored name never comes from the client: uuid + today's folder keeps paths clean and collision-free.
     const stamp = new Date().toISOString().slice(0, 10);
-    const filename = `${randomUUID()}${spec.ext}`;
+    const id = randomUUID();
+    const filename = `${id}${spec.ext}`;
     const displayName = (file.name || "upload").replace(/[\\/:*?"<>|]/g, "-").slice(0, 120);
 
-    // Vercel's filesystem is read-only, so when a Blob token exists the file goes to Vercel Blob (public URL).
-    // Without a token (local dev) it still falls back to public/uploads.
-    const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+    // Vercel's filesystem is read-only, so with Cloudinary env vars set the file goes to Cloudinary.
+    // Without them (local dev) it falls back to public/uploads.
+    const useCloud = cloudinaryEnabled();
     let relUrl: string;
     let abs = "";
-    if (useBlob) {
-      const blob = await put(`uploads/${stamp}/${filename}`, file, { access: "public", contentType: file.type, addRandomSuffix: false });
-      relUrl = blob.url;
+    if (useCloud) {
+      relUrl = await uploadToCloudinary(file, { folder: `malika/${stamp}`, publicId: id, kind: spec.kind });
     } else {
       const dir = join(process.cwd(), "public", "uploads", stamp);
       abs = join(dir, filename);
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, media: { id: created.id, url: created.url, name: created.name, kind: created.kind } });
     } catch (err) {
       // Never leave an orphan file behind if the row could not be written.
-      if (useBlob) await del(relUrl).catch(() => {});
+      if (useCloud) await deleteFromCloudinary(relUrl).catch(() => {});
       else await unlink(abs).catch(() => {});
       throw err;
     }
