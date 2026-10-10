@@ -8,7 +8,7 @@ const escapeLike = (q: string) => `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 
 /* ───────── homepage sections ───────── */
 
-export const HOME_SECTION_KEYS = ["hero", "marquee", "new_collection", "categories", "editorial", "lookbook", "best_sellers", "banner", "testimonials", "newsletter"] as const;
+export const HOME_SECTION_KEYS = ["hero", "marquee", "new_collection", "categories", "editorial", "lookbook", "best_sellers", "banner", "testimonials", "newsletter", "collections"] as const;
 export type HomeSectionKey = (typeof HOME_SECTION_KEYS)[number];
 
 /** Section content lives in `config` (jsonb); shape depends on the key — see the homepage builder for the fields. */
@@ -30,7 +30,8 @@ export async function syncHomepageSections() {
   const missing = HOME_SECTION_KEYS.filter((k) => !have.has(k));
   if (missing.length) {
     const nextOrder = existing.length ? Math.max(...existing.map((s) => s.sortOrder)) + 1 : 0;
-    await db.insert(homepageSections).values(missing.map((key, i) => ({ key, sortOrder: nextOrder + i, config: {} })));
+    // "collections" is opt-in: it arrives switched off so an existing homepage does not change until the admin enables it.
+    await db.insert(homepageSections).values(missing.map((key, i) => ({ key, sortOrder: nextOrder + i, config: {}, enabled: key !== "collections" })));
   }
 }
 

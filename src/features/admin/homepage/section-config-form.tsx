@@ -67,7 +67,11 @@ const SECTION_FIELDS: Record<string, readonly string[]> = {
   banner: ["eyebrowAr", "eyebrowEn", "titleAr", "titleEn", "bodyAr", "bodyEn", "image", "mobileImage", "ctaLabelAr", "ctaLabelEn", "ctaHref", "tone", "badge"],
   testimonials: ["eyebrowAr", "eyebrowEn", "titleAr", "titleEn", "bodyAr", "bodyEn", "count", "tone", "align"],
   newsletter: ["eyebrowAr", "eyebrowEn", "titleAr", "titleEn", "bodyAr", "bodyEn", "ctaLabelAr", "ctaLabelEn", "tone", "layout"],
+  collections: ["eyebrowAr", "eyebrowEn", "titleAr", "titleEn", "ctaLabelAr", "ctaLabelEn", "ctaHref", "count"],
 };
+
+/** Sections whose content now comes from the catalog; the form says so. */
+const SOURCE_NOTES = ["categories", "new_collection", "collections"];
 
 const FALLBACK_FIELDS = ["eyebrowAr", "eyebrowEn", "titleAr", "titleEn", "bodyAr", "bodyEn"];
 
@@ -130,6 +134,7 @@ export function SectionConfigForm({ row, onDone, onCancel }: { row: SectionDTO; 
       <input type="hidden" name="id" value={row.id} />
       <input type="hidden" name="config" value={payload} />
       <FormError error={state.errors?.form ?? stray} />
+      {SOURCE_NOTES.includes(row.key) ? <p className="border border-line bg-surface p-3 text-sm text-muted">{t(`sourceNote.${row.key}` as "sourceNote.categories")}</p> : null}
 
       {GROUPS.map((group) => {
         const visible = names.filter((n) => FIELDS[n]?.group === group);

@@ -63,7 +63,7 @@ export const homepageSections = pgTable(
   "homepage_section",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    key: text("key").notNull(), // hero | marquee | new_collection | categories | editorial | lookbook | best_sellers | banner | testimonials | newsletter
+    key: text("key").notNull(), // hero | marquee | new_collection | categories | editorial | lookbook | best_sellers | banner | testimonials | newsletter | collections
     enabled: boolean("enabled").notNull().default(true),
     sortOrder: integer("sort_order").notNull().default(0),
     config: jsonb("config").notNull().default({}),

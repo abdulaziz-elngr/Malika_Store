@@ -7,7 +7,7 @@ import { Lookbook } from "./lookbook";
 import { Marquee } from "./marquee";
 import { NewsletterBand } from "./newsletter-band";
 import type { SectionOverrides } from "./overrides";
-import { Categories, Editorial, NewCollection, PromoBanner } from "./sections";
+import { Categories, Collections, Editorial, NewCollection, PromoBanner } from "./sections";
 import { Testimonials } from "./testimonials";
 
 /** Fallback order used before the homepage builder has been synced (or when everything is disabled). */
@@ -87,7 +87,9 @@ export async function RenderSection({ k, config }: { k: HomeSectionKey; config?:
     case "new_collection":
       return <NewCollection o={o} />;
     case "categories":
-      return <Categories o={o} />;
+      return <Categories o={o} limit={num("count") ?? 6} />;
+    case "collections":
+      return <Collections o={o} limit={num("count") ?? 3} />;
     case "editorial":
       return <Editorial o={o} />;
     case "lookbook":

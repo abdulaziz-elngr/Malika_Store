@@ -218,6 +218,11 @@
     "view": "View collection",
     "pieces": "Shop the collection"
   },
+  "collectionsSection": {
+    "eyebrow": "The collections",
+    "title": "Chapters of the house",
+    "cta": "All collections"
+  },
   "validation": {
     "required": "This field is required.",
     "email": "Enter a valid email address.",
@@ -1042,7 +1047,13 @@
         "best_sellers": "Best sellers",
         "banner": "Promo banner",
         "testimonials": "Testimonials",
-        "newsletter": "Newsletter sign-up"
+        "newsletter": "Newsletter sign-up",
+        "collections": "Collections"
+      },
+      "sourceNote": {
+        "categories": "Tiles come from your visible top-level categories (Catalog → Categories), in their sort order. The three image fields below are used only while no category exists.",
+        "new_collection": "Shows your newest live collection (cover, name, description, link). Anything you fill in below overrides it; empty fields use the collection's own data.",
+        "collections": "Shows up to 3 of your newest live collections as large cards. Switched off by default — enable it from the list."
       },
       "groups": {
         "copy": "Copy",
@@ -1058,9 +1069,9 @@
         "bodyEn": "Text — English",
         "mobileImage": "Mobile image URL",
         "secondaryImage": "Second image URL",
-        "womenImage": "Women card image URL",
-        "menImage": "Men card image URL",
-        "collectionsImage": "Collections card image URL",
+        "womenImage": "Women card image URL (only when there are no categories)",
+        "menImage": "Men card image URL (only when there are no categories)",
+        "collectionsImage": "Collections card image URL (only when there are no categories)",
         "videoUrl": "Background video URL",
         "ctaLabelAr": "Button text — Arabic",
         "ctaLabelEn": "Button text — English",

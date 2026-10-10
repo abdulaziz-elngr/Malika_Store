@@ -77,6 +77,15 @@ html[lang="ar"] * {
   letter-spacing: 0 !important;
 }
 
+/* A bare "grid" has one implicit column sized to its widest content, so a wide child (tab bar, table, long text)
+   stretched the whole page sideways on phones. Give every grid a shrinkable single column by default;
+   explicit grid-cols-* utilities still override this. */
+@layer base {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;

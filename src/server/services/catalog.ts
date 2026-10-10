@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, exists, gte, ilike, inArray, isNotNull, lte, ne, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, gte, ilike, inArray, isNotNull, isNull, lte, ne, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db/client";
 import { audiences, categories, collections, productCollections, productImages, productVariants, products } from "@/db/schema";
 import type { ShopQuery } from "@/lib/validation/shop";
@@ -89,6 +89,33 @@ export async function getRelatedProducts(productId: string, categoryId: string |
 
 export async function listCollections() {
   return db.select().from(collections).where(eq(collections.visible, true)).orderBy(asc(collections.createdAt));
+}
+
+/** Visible top-level categories in display order — feeds the homepage "shop by category" tiles. */
+export async function listHomeCategories(limit = 6) {
+  return db
+    .select()
+    .from(categories)
+    .where(and(eq(categories.visible, true), isNull(categories.parentId)))
+    .orderBy(asc(categories.sortOrder), asc(categories.createdAt))
+    .limit(limit);
+}
+
+/** Newest visible collections that are currently live (startsAt/endsAt respected), newest first. */
+export async function listLatestCollections(limit = 3) {
+  const now = new Date();
+  return db
+    .select()
+    .from(collections)
+    .where(and(eq(collections.visible, true), or(isNull(collections.startsAt), lte(collections.startsAt, now)), or(isNull(collections.endsAt), gte(collections.endsAt, now))))
+    .orderBy(desc(collections.createdAt))
+    .limit(limit);
+}
+
+/** The single newest live collection — feeds the homepage "new collection" block. */
+export async function getLatestCollection() {
+  const [row] = await listLatestCollections(1);
+  return row ?? null;
 }
 
 export async function getCollection(slug: string) {
