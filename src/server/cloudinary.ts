@@ -38,7 +38,9 @@ export async function uploadToCloudinary(file: File, opts: { folder: string; pub
 export async function deleteFromCloudinary(url: string): Promise<void> {
   const m = url.match(/^https:\/\/res\.cloudinary\.com\/[^/]+\/(image|video)\/upload\/(?:v\d+\/)?(.+)\.[a-z0-9]+$/i);
   if (!m || !cloudinaryEnabled()) return;
-  const [, kind, publicId] = m;
+  const kind = m[1];
+  const publicId = m[2];
+  if (!kind || !publicId) return;
   const timestamp = String(Math.floor(Date.now() / 1000));
   const fd = new FormData();
   fd.set("public_id", publicId);
