@@ -50,6 +50,15 @@ export function AudienceForm({ row, onDone, onCancel }: { row: AudienceRow | nul
         <input type="hidden" name="includeUnisex" value="false" />
       </label>
 
+      <label className="flex items-start gap-3 text-sm">
+        <input type="checkbox" name="showInHeader" defaultChecked={row?.showInHeader ?? true} value="true" className="mt-1 size-4 accent-[var(--color-brand,#67251b)]" />
+        <span>
+          {t("showInHeader")}
+          <span className="block text-xs text-muted">{t("showInHeaderHint")}</span>
+        </span>
+        <input type="hidden" name="showInHeader" value="false" />
+      </label>
+
       <label className="flex items-center gap-3 text-sm">
         <input type="checkbox" name="visible" defaultChecked={row?.visible ?? true} value="true" className="size-4 accent-[var(--color-brand,#67251b)]" />
         <span>{f("visible")}</span>

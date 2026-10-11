@@ -374,6 +374,9 @@ async function main() {
     }
     n++;
   }
+  // Link each category / collection to the audience its products are for (same rule as migration 0007).
+  await db.execute(sql`update category c set audience_id = a.id from audience a where a.slug = (select min(p.gender) from product p where p.category_id = c.id and p.gender <> 'unisex' having count(distinct p.gender) = 1)`);
+  await db.execute(sql`update collection col set audience_id = a.id from audience a where a.slug = (select min(p.gender) from product_collection pc join product p on p.id = pc.product_id where pc.collection_id = col.id and p.gender <> 'unisex' having count(distinct p.gender) = 1)`);
   await seedCommerce(catId, colId);
   await seedStaff();
   await seedContent();

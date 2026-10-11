@@ -12,6 +12,8 @@ const str = (fd: FormData, k: string) => (typeof fd.get(k) === "string" ? (fd.ge
 const revalidateAll = () => {
   revalidatePath("/[locale]/admin/audiences", "page");
   revalidatePath("/[locale]/admin/products", "page");
+  revalidatePath("/[locale]/admin/categories", "page");
+  revalidatePath("/[locale]/admin/collections", "page");
   revalidatePath("/[locale]/shop", "page");
   revalidatePath("/", "layout");
 };
@@ -24,6 +26,7 @@ export async function saveAudienceAction(_: ActionState, fd: FormData): Promise<
     nameEn: str(fd, "nameEn"),
     slug: str(fd, "slug"),
     includeUnisex: str(fd, "includeUnisex"),
+    showInHeader: str(fd, "showInHeader"),
     visible: str(fd, "visible"),
   });
   if (!parsed.success) return { errors: fieldErrors(parsed.error) };

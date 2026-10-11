@@ -53,12 +53,21 @@ export async function listProducts(q: ShopQuery, fixedGender?: string) {
 
 export type ProductListItem = Awaited<ReturnType<typeof listProducts>>["items"][number];
 
+/**
+ * Limits a category/collection list to one audience: the ones linked to it plus the general ones (no audience set).
+ * Without an audience slug nothing is filtered, so the plain /shop page still offers everything.
+ */
+function belongsToAudience(column: typeof categories.audienceId | typeof collections.audienceId, audienceSlug?: string): SQL | undefined {
+  if (!audienceSlug) return undefined;
+  return or(isNull(column), inArray(column, db.select({ id: audiences.id }).from(audiences).where(eq(audiences.slug, audienceSlug))));
+}
+
 export async function getFacets(fixedGender?: string) {
   const base = buildWhere({}, fixedGender);
   const [auds, cats, cols, sizes, colors, [range]] = await Promise.all([
     db.select({ slug: audiences.slug, nameAr: audiences.nameAr, nameEn: audiences.nameEn }).from(audiences).where(eq(audiences.visible, true)).orderBy(asc(audiences.sortOrder)),
-    db.select({ slug: categories.slug, nameAr: categories.nameAr, nameEn: categories.nameEn }).from(categories).where(eq(categories.visible, true)).orderBy(asc(categories.sortOrder)),
-    db.select({ slug: collections.slug, nameAr: collections.nameAr, nameEn: collections.nameEn }).from(collections).where(eq(collections.visible, true)).orderBy(asc(collections.createdAt)),
+    db.select({ slug: categories.slug, nameAr: categories.nameAr, nameEn: categories.nameEn }).from(categories).where(and(eq(categories.visible, true), belongsToAudience(categories.audienceId, fixedGender))).orderBy(asc(categories.sortOrder)),
+    db.select({ slug: collections.slug, nameAr: collections.nameAr, nameEn: collections.nameEn }).from(collections).where(and(eq(collections.visible, true), belongsToAudience(collections.audienceId, fixedGender))).orderBy(asc(collections.createdAt)),
     db.selectDistinct({ size: productVariants.size }).from(productVariants).innerJoin(products, eq(products.id, productVariants.productId)).where(base),
     db.selectDistinct({ nameAr: productVariants.colorNameAr, nameEn: productVariants.colorNameEn, hex: productVariants.colorHex }).from(productVariants).innerJoin(products, eq(products.id, productVariants.productId)).where(base),
     db.select({ min: sql<number>`coalesce(min(${effectivePrice}),0)`, max: sql<number>`coalesce(max(${effectivePrice}),0)` }).from(products).where(base),
@@ -87,8 +96,15 @@ export async function getRelatedProducts(productId: string, categoryId: string |
   });
 }
 
-export async function listCollections() {
-  return db.select().from(collections).where(eq(collections.visible, true)).orderBy(asc(collections.createdAt));
+/** Visible collections, optionally narrowed to one audience (plus the general ones). Each row carries its audience's slug and names. */
+export async function listCollections(audienceSlug?: string) {
+  return db
+    .select({ c: collections, audienceSlug: audiences.slug, audienceNameAr: audiences.nameAr, audienceNameEn: audiences.nameEn })
+    .from(collections)
+    .leftJoin(audiences, eq(audiences.id, collections.audienceId))
+    .where(and(eq(collections.visible, true), belongsToAudience(collections.audienceId, audienceSlug)))
+    .orderBy(asc(collections.createdAt))
+    .then((rows) => rows.map((r) => ({ ...r.c, audienceSlug: r.audienceSlug, audienceNameAr: r.audienceNameAr, audienceNameEn: r.audienceNameEn })));
 }
 
 /** Visible top-level categories in display order — feeds the homepage "shop by category" tiles. */
@@ -133,7 +149,42 @@ export async function getProductsByIds(ids: string[]) {
   return ids.map((id) => rows.find((r) => r.id === id)).filter((r): r is (typeof rows)[number] => !!r);
 }
 
+/** Visible audiences in admin order — used for the audience chips on the collections page. */
+export async function listVisibleAudiences() {
+  return db.select({ slug: audiences.slug, nameAr: audiences.nameAr, nameEn: audiences.nameEn }).from(audiences).where(eq(audiences.visible, true)).orderBy(asc(audiences.sortOrder));
+}
+
 export async function getAudience(slug: string) {
   const [row] = await db.select().from(audiences).where(and(eq(audiences.slug, slug), eq(audiences.visible, true))).limit(1);
   return row ?? null;
+}
+
+export type HeaderAudience = {
+  id: string;
+  slug: string;
+  nameAr: string;
+  nameEn: string;
+  categories: { slug: string; nameAr: string; nameEn: string }[];
+  collections: { slug: string; nameAr: string; nameEn: string }[];
+};
+
+/**
+ * Audiences for the storefront header, in admin order, each with the visible top-level categories and the live collections
+ * linked to it. An audience appears the moment it is created (visible + "show in header"); hiding it in the admin removes it.
+ */
+export async function getHeaderAudiences(): Promise<HeaderAudience[]> {
+  const now = new Date();
+  const [auds, cats, cols] = await Promise.all([
+    db.select().from(audiences).where(and(eq(audiences.visible, true), eq(audiences.showInHeader, true))).orderBy(asc(audiences.sortOrder)),
+    db.select({ audienceId: categories.audienceId, slug: categories.slug, nameAr: categories.nameAr, nameEn: categories.nameEn }).from(categories).where(and(eq(categories.visible, true), isNull(categories.parentId), isNotNull(categories.audienceId))).orderBy(asc(categories.sortOrder), asc(categories.createdAt)),
+    db.select({ audienceId: collections.audienceId, slug: collections.slug, nameAr: collections.nameAr, nameEn: collections.nameEn }).from(collections).where(and(eq(collections.visible, true), isNotNull(collections.audienceId), or(isNull(collections.startsAt), lte(collections.startsAt, now)), or(isNull(collections.endsAt), gte(collections.endsAt, now)))).orderBy(desc(collections.createdAt)),
+  ]);
+  return auds.map((a) => ({
+    id: a.id,
+    slug: a.slug,
+    nameAr: a.nameAr,
+    nameEn: a.nameEn,
+    categories: cats.filter((c) => c.audienceId === a.id).map(({ slug, nameAr, nameEn }) => ({ slug, nameAr, nameEn })),
+    collections: cols.filter((c) => c.audienceId === a.id).map(({ slug, nameAr, nameEn }) => ({ slug, nameAr, nameEn })),
+  }));
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { LayoutGrid, Pencil, Plus, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge, Card, CardHeader, EmptyState, TableWrap, Td, Th } from "@/components/admin/primitives";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
@@ -9,18 +9,23 @@ import { Drawer } from "@/components/admin/overlay";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { deleteCollectionAction } from "@/server/actions/admin-catalog";
-import type { CollectionRow } from "../catalog/types";
+import type { AudienceOption, CollectionRow } from "../catalog/types";
 import { CollectionForm } from "./collection-form";
 
 type Row = CollectionRow & { productIds: string[] };
 type ProductOption = { id: string; nameEn: string; nameAr: string; sku: string };
-type Props = { rows: Row[]; products: ProductOption[]; canCreate: boolean; canEdit: boolean; canDelete: boolean; emptyIcon?: React.ReactNode };
+type Props = { rows: Row[]; products: ProductOption[]; audiences: AudienceOption[]; canCreate: boolean; canEdit: boolean; canDelete: boolean; emptyIcon?: React.ReactNode };
 
 /** Collection list with a drawer form (incl. product assignment) and a guarded delete. */
-export function CollectionsManager({ rows, products, canCreate, canEdit, canDelete, emptyIcon }: Props) {
+export function CollectionsManager({ rows, products, audiences, canCreate, canEdit, canDelete, emptyIcon }: Props) {
   const t = useTranslations("admin.collections");
   const f = useTranslations("admin.form");
   const router = useRouter();
+  const locale = useLocale();
+  const audienceName = (id: string | null) => {
+    const a = audiences.find((x) => x.id === id);
+    return a ? (locale === "ar" ? a.nameAr : a.nameEn) : null;
+  };
   const [open, setOpen] = useState<null | "new" | Row>(null);
   const [confirm, setConfirm] = useState<Row | null>(null);
 
@@ -62,6 +67,7 @@ export function CollectionsManager({ rows, products, canCreate, canEdit, canDele
             <thead>
               <tr className="border-b border-line">
                 <Th>{f("nameEn")}</Th>
+                <Th>{t("audience")}</Th>
                 <Th>{t("slug")}</Th>
                 <Th>{t("products")}</Th>
                 <Th>{t("window")}</Th>
@@ -77,6 +83,9 @@ export function CollectionsManager({ rows, products, canCreate, canEdit, canDele
                   <Td>
                     <p className="font-medium">{c.nameEn}</p>
                     <p className="text-xs text-muted">{c.nameAr}</p>
+                  </Td>
+                  <Td>
+                    {audienceName(c.audienceId) ? <Badge tone="sage">{audienceName(c.audienceId)}</Badge> : <span className="text-xs text-muted">{t("allAudiences")}</span>}
                   </Td>
                   <Td dir="ltr" className="text-muted">
                     /{c.slug}
@@ -108,7 +117,7 @@ export function CollectionsManager({ rows, products, canCreate, canEdit, canDele
       </Card>
 
       <Drawer open={open !== null} onClose={() => setOpen(null)} title={open === "new" ? t("newTitle") : t("editTitle")} className="w-[min(96vw,40rem)]">
-        {open && <CollectionForm row={open === "new" ? null : open} products={products} onDone={() => setOpen(null)} onCancel={() => setOpen(null)} />}
+        {open && <CollectionForm row={open === "new" ? null : open} products={products} audiences={audiences} onDone={() => setOpen(null)} onCancel={() => setOpen(null)} />}
       </Drawer>
 
       <ConfirmDialog

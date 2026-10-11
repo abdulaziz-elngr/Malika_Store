@@ -4,21 +4,28 @@ import { join } from "node:path";
 import { NextResponse } from "next/server";
 import { rateLimit } from "@/server/auth/rate-limit";
 import { authorize, ForbiddenError, UnauthenticatedError } from "@/server/auth/rbac";
-import { recordMedia } from "@/server/services/admin-content";
+import { listMediaAdmin, recordMedia } from "@/server/services/admin-content";
+import { ACCEPTED, MAX_BYTES, cleanFolder, cleanName } from "@/server/media-rules";
 import { cloudinaryEnabled, deleteFromCloudinary, uploadToCloudinary } from "@/server/cloudinary";
 
-/** Hard cap for the boutique's media: photography and short lookbook clips only. */
-const MAX_BYTES = 5 * 1024 * 1024;
-
-/** Exact MIME → extension + kind. Anything not listed here is refused (notably SVG, which can carry scripts). */
-const ACCEPTED: Record<string, { ext: string; kind: "image" | "video" }> = {
-  "image/jpeg": { ext: ".jpg", kind: "image" },
-  "image/png": { ext: ".png", kind: "image" },
-  "image/webp": { ext: ".webp", kind: "image" },
-  "image/avif": { ext: ".avif", kind: "image" },
-  "video/mp4": { ext: ".mp4", kind: "video" },
-  "video/webm": { ext: ".webm", kind: "video" },
-};
+/** Library browser for the picker dialog: GET /api/admin/media?q=&page=&kind=image|video */
+export async function GET(req: Request) {
+  try {
+    await authorize("media:view");
+    const sp = new URL(req.url).searchParams;
+    const page = Math.min(500, Math.max(1, Number.parseInt(sp.get("page") ?? "", 10) || 1));
+    const kind = sp.get("kind");
+    const data = await listMediaAdmin({ q: sp.get("q")?.slice(0, 80) || undefined, page });
+    const rows = data.rows
+      .filter((r) => !kind || r.kind === kind)
+      .map((r) => ({ id: r.id, url: r.url, name: r.name, kind: r.kind }));
+    return NextResponse.json({ ok: true, rows, pages: data.pages });
+  } catch (err) {
+    if (err instanceof UnauthenticatedError || err instanceof ForbiddenError) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    console.error("[media/list]", err);
+    return NextResponse.json({ error: "server" }, { status: 500 });
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -34,18 +41,13 @@ export async function POST(req: Request) {
     if (file.size > MAX_BYTES) return NextResponse.json({ error: "too_large" }, { status: 413 });
 
     // Folder is client metadata only: whitelisted characters, no traversal possible.
-    const folder =
-      String(form?.get("folder") ?? "")
-        .replace(/[^\w\-/ ]/g, "")
-        .replace(/\/+/g, "/")
-        .replace(/^\/+|\/+$/g, "")
-        .slice(0, 60) || "general";
+    const folder = cleanFolder(form?.get("folder"));
 
     // The stored name never comes from the client: uuid + today's folder keeps paths clean and collision-free.
     const stamp = new Date().toISOString().slice(0, 10);
     const id = randomUUID();
     const filename = `${id}${spec.ext}`;
-    const displayName = (file.name || "upload").replace(/[\\/:*?"<>|]/g, "-").slice(0, 120);
+    const displayName = cleanName(file.name);
 
     // Vercel's filesystem is read-only, so with Cloudinary env vars set the file goes to Cloudinary.
     // Without them (local dev) it falls back to public/uploads.

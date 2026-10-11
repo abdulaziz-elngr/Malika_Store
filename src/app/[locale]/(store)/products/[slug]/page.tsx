@@ -4,6 +4,7 @@ import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { ProductReviews } from "@/features/storefront/reviews/product-reviews";
 import { ProductBuyPanel } from "@/features/storefront/product/product-buy-panel";
 import { ProductCard } from "@/features/storefront/shop/product-card";
 import { pick, type Loc } from "@/lib/localize";
@@ -79,6 +80,8 @@ export default async function ProductPage({ params }: { params: Params }) {
           ))}
         </div>
       </section>
+
+      <ProductReviews productId={product.id} slug={product.slug} />
 
       {related.length > 0 && (
         <section aria-labelledby="pd-related" className="mt-24">

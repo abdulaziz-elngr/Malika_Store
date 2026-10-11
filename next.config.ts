@@ -13,7 +13,7 @@ const csp = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "media-src 'self' blob: https:",
-  "connect-src 'self'",
+  "connect-src 'self' https://api.cloudinary.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

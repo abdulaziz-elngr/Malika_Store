@@ -5,9 +5,12 @@ import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { inputClass, useFieldError } from "@/components/ui/field";
 import { useRouter } from "@/i18n/navigation";
+import { MAX_UPLOAD_BYTES as MAX_BYTES } from "./limits";
+import { uploadMediaFile } from "./upload-client";
+
+const ERR_KEY = { too_large: "fileTooLarge", bad_type: "badFileType", rate_limited: "rateLimited", failed: "uploadFailed" } as const;
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm";
-const MAX_BYTES = 5 * 1024 * 1024;
 
 type UpState = { busy: boolean; done: number; error: string | null };
 
@@ -23,15 +26,6 @@ export function MediaUpload({ onUploaded }: { onUploaded?: () => void }) {
 
   /** useFieldError types its result as optional; every key we pass is known, so narrow once here. */
   const msg = (key: string): string => ferr(key) ?? "";
-  const mapError = (status: number, code?: string) =>
-    status === 413 || code === "too_large"
-      ? msg("fileTooLarge")
-      : status === 415 || code === "bad_type"
-        ? msg("badFileType")
-        : status === 429 || code === "rate_limited"
-          ? msg("rateLimited")
-          : msg("uploadFailed");
-
   const send = async (files: FileList | File[] | null) => {
     const list = Array.from(files ?? []).slice(0, 10);
     if (!list.length || state.busy) return;
@@ -44,19 +38,10 @@ export function MediaUpload({ onUploaded }: { onUploaded?: () => void }) {
         error = msg("fileTooLarge");
         break;
       }
-      const fd = new FormData();
-      fd.set("file", file);
-      if (folder.trim()) fd.set("folder", folder.trim());
-      try {
-        const res = await fetch("/api/admin/media", { method: "POST", body: fd });
-        if (res.ok) done++;
-        else {
-          const body = (await res.json().catch(() => ({}))) as { error?: string };
-          error = mapError(res.status, body.error);
-          break;
-        }
-      } catch {
-        error = msg("uploadFailed");
+      const r = await uploadMediaFile(file, folder);
+      if (r.ok) done++;
+      else {
+        error = msg(ERR_KEY[r.code]);
         break;
       }
     }

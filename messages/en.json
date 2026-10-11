@@ -21,7 +21,9 @@
     "closeMenu": "Close menu",
     "primary": "Primary navigation",
     "cartCount": "Cart, {count, plural, one {# item} other {# items}}",
-    "wishlistCount": "Wishlist, {count, plural, one {# item} other {# items}}"
+    "wishlistCount": "Wishlist, {count, plural, one {# item} other {# items}}",
+    "categories": "Categories",
+    "viewAll": "View all"
   },
   "common": {
     "shopNow": "Shop now",
@@ -216,7 +218,10 @@
     "title": "Collections",
     "intro": "Each collection is a chapter: a mood, a palette, a point of view.",
     "view": "View collection",
-    "pieces": "Shop the collection"
+    "pieces": "Shop the collection",
+    "all": "All",
+    "filterByAudience": "Filter by audience",
+    "empty": "No collections here yet."
   },
   "collectionsSection": {
     "eyebrow": "The collections",
@@ -267,14 +272,18 @@
     "selfActive": "You cannot deactivate your own account.",
     "lastSuper": "The last Super Admin can neither be removed nor demoted.",
     "roleLocked": "The Super Admin role is always granted every permission.",
-    "fileTooLarge": "That file is larger than 5 MB.",
+    "fileTooLarge": "That file is larger than 20 MB.",
     "badFileType": "Only images and short videos are allowed.",
     "uploadFailed": "The upload failed. Please try again.",
     "selfDelete": "You cannot delete your own account.",
     "roleInUse": "This role is still assigned to staff accounts.",
     "roleSystem": "This system role cannot be deleted.",
     "orderProof": "We could not accept your transfer details. Please check the number and the receipt, then try again.",
-    "tooMany": "Too many entries (10 at most)."
+    "tooMany": "Too many entries (10 at most).",
+    "ratingRequired": "Please choose a star rating.",
+    "reviewShort": "Please write at least a few words.",
+    "reviewLogin": "Please sign in to leave a review.",
+    "reviewNotEligible": "Only customers who have received this piece can review it."
   },
   "wishlist": {
     "added": "Saved to your wishlist",
@@ -827,7 +836,11 @@
         "copper": "Copper",
         "cream": "Cream",
         "sage": "Sage"
-      }
+      },
+      "audience": "Audience",
+      "audienceHint": "Who this belongs to. It appears under that audience in the store header and filters.",
+      "audiencePlaceholder": "Choose an audience…",
+      "allAudiences": "All audiences"
     },
     "products": {
       "eyebrow": "Catalogue",
@@ -1020,7 +1033,11 @@
         "copper": "Copper",
         "cream": "Cream",
         "sage": "Sage"
-      }
+      },
+      "audience": "Audience",
+      "audienceHint": "Who this belongs to. It appears under that audience in the store header and filters.",
+      "audiencePlaceholder": "Choose an audience…",
+      "allAudiences": "All audiences"
     },
     "homepage": {
       "eyebrow": "Storefront",
@@ -1219,7 +1236,7 @@
       "uploading": "Uploading…",
       "uploaded": "{count, plural, one {# file uploaded} other {# files uploaded}}",
       "uploadedNew": "Uploaded — the new file is in the grid.",
-      "maxSize": "Up to 5 MB per file, maximum 10 at a time.",
+      "maxSize": "Up to 20 MB per file, maximum 10 at a time.",
       "copy": "Copy URL",
       "copied": "URL copied to the clipboard.",
       "copyFailed": "Could not copy — select the URL and copy it manually.",
@@ -1233,7 +1250,12 @@
       "altEn": "Alt text — English",
       "kindImage": "Image",
       "kindVideo": "Video",
-      "useHint": "Tip: press Copy URL on a file, then paste it into an image field in Products, Banners or Pages."
+      "pickFromDevice": "Upload from device",
+      "pickFromLibrary": "Choose from library",
+      "removePicked": "Remove image",
+      "libraryTitle": "Media library",
+      "libraryFailed": "Could not load the library. Please try again.",
+      "useHint": "Tip: image fields in Products, Banners and Categories now let you upload from your device or pick straight from this library."
     },
     "users": {
       "eyebrow": "System",
@@ -1673,7 +1695,9 @@
       "includeUnisex": "Also show unisex products",
       "includeUnisexHint": "When on, products marked for both genders also appear in this audience.",
       "storefrontLink": "Storefront page",
-      "inUse": "Products still use this audience — move them to another one first."
+      "inUse": "Products, categories or collections still use this audience — move them to another one first.",
+      "showInHeader": "Show in the store header",
+      "showInHeaderHint": "Adds this audience to the header menu, with its categories and collections in a dropdown."
     }
   },
   "homeSections": {
@@ -1699,5 +1723,28 @@
   "cmsPage": {
     "eyebrow": "MALIKA",
     "empty": "This page does not have any content yet."
+  },
+  "reviews": {
+    "title": "Reviews",
+    "count": "{count, plural, one {# review} other {# reviews}}",
+    "empty": "No reviews yet.",
+    "verified": "Verified purchase",
+    "write": "Write a review",
+    "loginPrompt": "Sign in to your account to review a piece you've received.",
+    "loginCta": "Sign in",
+    "notEligible": "Only customers who have received this piece can review it.",
+    "yourRating": "Your rating",
+    "starsLabel": "{n, plural, one {# star} other {# stars}}",
+    "yourReview": "Your review",
+    "placeholder": "How was the fit, the fabric, the quality?",
+    "moderationNote": "Reviews appear on the page after our team approves them.",
+    "submit": "Submit review",
+    "update": "Update review",
+    "thanks": "Thank you! Your review was sent and will appear once approved.",
+    "statusPending": "Your review is awaiting approval. You can still edit it.",
+    "statusApproved": "Your review is published. Editing it will send it for approval again.",
+    "statusRejected": "Your review wasn't approved. You can edit and resubmit it.",
+    "rateProduct": "Rate this piece",
+    "editYourReview": "Your review"
   }
 }

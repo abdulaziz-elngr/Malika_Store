@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Pencil, Plus, Tags, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge, Card, CardHeader, EmptyState, TableWrap, Td, Th } from "@/components/admin/primitives";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
@@ -10,15 +10,20 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { deleteCategoryAction, moveCategoryAction } from "@/server/actions/admin-catalog";
 import { CategoryForm } from "./category-form";
-import type { CategoryRow } from "./types";
+import type { AudienceOption, CategoryRow } from "./types";
 
-type Props = { rows: CategoryRow[]; canCreate: boolean; canEdit: boolean; canDelete: boolean; emptyIcon?: React.ReactNode };
+type Props = { rows: CategoryRow[]; audiences: AudienceOption[]; canCreate: boolean; canEdit: boolean; canDelete: boolean; emptyIcon?: React.ReactNode };
 
 /** Category list with a drawer form for create/edit, order arrows and a guarded delete. */
-export function CategoriesManager({ rows, canCreate, canEdit, canDelete, emptyIcon }: Props) {
+export function CategoriesManager({ rows, audiences, canCreate, canEdit, canDelete, emptyIcon }: Props) {
   const t = useTranslations("admin.categories");
   const f = useTranslations("admin.form");
   const router = useRouter();
+  const locale = useLocale();
+  const audienceName = (id: string | null) => {
+    const a = audiences.find((x) => x.id === id);
+    return a ? (locale === "ar" ? a.nameAr : a.nameEn) : null;
+  };
   const [open, setOpen] = useState<null | "new" | CategoryRow>(null);
   const [confirm, setConfirm] = useState<CategoryRow | null>(null);
 
@@ -58,6 +63,7 @@ export function CategoriesManager({ rows, canCreate, canEdit, canDelete, emptyIc
             <thead>
               <tr className="border-b border-line">
                 <Th>{f("nameEn")}</Th>
+                <Th>{t("audience")}</Th>
                 <Th>{t("slug")}</Th>
                 <Th>{t("productCount")}</Th>
                 <Th>{f("visible")}</Th>
@@ -73,6 +79,9 @@ export function CategoriesManager({ rows, canCreate, canEdit, canDelete, emptyIc
                   <Td>
                     <p className="font-medium">{c.nameEn}</p>
                     <p className="text-xs text-muted">{c.nameAr}</p>
+                  </Td>
+                  <Td>
+                    {audienceName(c.audienceId) ? <Badge tone="sage">{audienceName(c.audienceId)}</Badge> : <span className="text-xs text-muted">{t("allAudiences")}</span>}
                   </Td>
                   <Td dir="ltr" className="text-muted">
                     /{c.slug}
@@ -124,6 +133,7 @@ export function CategoriesManager({ rows, canCreate, canEdit, canDelete, emptyIc
           <CategoryForm
             row={open === "new" ? null : open}
             parents={rows}
+            audiences={audiences}
             onDone={() => setOpen(null)}
             onCancel={() => setOpen(null)}
           />

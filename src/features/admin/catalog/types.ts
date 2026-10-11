@@ -10,6 +10,7 @@ export type CategoryRow = {
   imageUrl: string | null;
   tone: string;
   parentId: string | null;
+  audienceId: string | null;
   sortOrder: number;
   visible: boolean;
   seoTitleAr: string | null;
@@ -31,6 +32,7 @@ export type CollectionRow = {
   coverUrl: string | null;
   bannerUrl: string | null;
   tone: string;
+  audienceId: string | null;
   startsAt: Date | null;
   endsAt: Date | null;
   visible: boolean;
@@ -85,3 +87,6 @@ export type VariantRow = {
   costMinor: number | null;
   priceMinor: number;
 };
+
+/** An audience as offered in the category / collection / product forms. */
+export type AudienceOption = { id: string; slug: string; nameAr: string; nameEn: string };

@@ -4,7 +4,10 @@ export type AudienceRow = {
   nameAr: string;
   nameEn: string;
   includeUnisex: boolean;
+  showInHeader: boolean;
   visible: boolean;
   sortOrder: number;
   productCount: number;
+  categoryCount: number;
+  collectionCount: number;
 };

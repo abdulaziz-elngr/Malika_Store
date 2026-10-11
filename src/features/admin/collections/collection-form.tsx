@@ -1,13 +1,13 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FormError, inputClass } from "@/components/ui/field";
 import { useRouter } from "@/i18n/navigation";
 import { saveCollectionAction } from "@/server/actions/admin-catalog";
 import type { ActionState } from "@/server/actions/types";
-import type { CollectionRow } from "../catalog/types";
+import type { AudienceOption, CollectionRow } from "../catalog/types";
 
 const TONES = ["wine", "copper", "cream", "sage"] as const;
 
@@ -17,10 +17,11 @@ type Row = CollectionRow & { productIds: string[] };
 const localInput = (d: Date | null) => (d ? new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16) : "");
 
 /** Create/edit one collection, including its product assignment (searchable checklist). */
-export function CollectionForm({ row, products, onDone, onCancel }: { row: Row | null; products: ProductOption[]; onDone: () => void; onCancel: () => void }) {
+export function CollectionForm({ row, products, audiences, onDone, onCancel }: { row: Row | null; products: ProductOption[]; audiences: AudienceOption[]; onDone: () => void; onCancel: () => void }) {
   const t = useTranslations("admin.collections");
   const f = useTranslations("admin.form");
   const router = useRouter();
+  const locale = useLocale();
   const [state, action, pending] = useActionState(saveCollectionAction, {} as ActionState);
   const [selected, setSelected] = useState<string[]>(() => row?.productIds ?? []);
   const [filter, setFilter] = useState("");
@@ -54,6 +55,21 @@ export function CollectionForm({ row, products, onDone, onCancel }: { row: Row |
           {(p) => <input {...p} name="nameEn" dir="ltr" defaultValue={row?.nameEn} maxLength={80} required className={inputClass} />}
         </Field>
       </div>
+
+      <Field label={t("audience")} hint={t("audienceHint")} error={state.errors?.audienceId}>
+        {(p) => (
+          <select {...p} name="audienceId" defaultValue={row?.audienceId ?? ""} required className={inputClass}>
+            <option value="" disabled>
+              {t("audiencePlaceholder")}
+            </option>
+            {audiences.map((a) => (
+              <option key={a.id} value={a.id}>
+                {locale === "ar" ? a.nameAr : a.nameEn}
+              </option>
+            ))}
+          </select>
+        )}
+      </Field>
 
       <Field label={t("slug")} hint={f("optional") + " — " + t("slugHint")} error={state.errors?.slug}>
         {(p) => <input {...p} name="slug" dir="ltr" defaultValue={row?.slug} maxLength={80} className={inputClass} />}

@@ -8,6 +8,8 @@ import { z } from "zod";
 const text = (min = 1, max = 200) => z.string().trim().min(min, "required").max(max, "tooLong");
 const optional = (max = 500) => z.string().trim().max(max, "tooLong");
 const uuid = z.uuid();
+/** The audience a category/collection belongs to is mandatory: an empty select fails here with the "required" message. */
+const audienceRef = z.uuid("required");
 
 /** "1850" | "1,850.50" → 185050 piastres. */
 export const moneyInput = z.string().trim().transform((v, ctx) => {
@@ -146,6 +148,7 @@ export const audienceFormSchema = z.object({
   nameEn: text(2, 60),
   slug: z.string().trim().max(40, "tooLong").regex(/^[a-z0-9-]*$/, "slug"),
   includeUnisex: flag,
+  showInHeader: flag,
   visible: flag,
 });
 
@@ -158,6 +161,7 @@ export const categoryFormSchema = z.object({
   imageUrl: z.string().trim().max(500, "tooLong"),
   tone,
   parentId: uuid.nullable(),
+  audienceId: audienceRef,
   visible: flag,
   seoTitleAr: optional(70),
   seoTitleEn: optional(70),
@@ -176,6 +180,7 @@ export const collectionFormSchema = z.object({
   coverUrl: z.string().trim().max(500, "tooLong"),
   bannerUrl: z.string().trim().max(500, "tooLong"),
   tone,
+  audienceId: audienceRef,
   startsAt: z.string().trim(),
   endsAt: z.string().trim(),
   visible: flag,

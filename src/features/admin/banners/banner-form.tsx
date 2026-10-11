@@ -8,6 +8,7 @@ import { useRouter } from "@/i18n/navigation";
 import { saveBannerAction } from "@/server/actions/admin-content";
 import type { ActionState } from "@/server/actions/types";
 import type { BannerDTO } from "./types";
+import { MediaPickerField } from "@/features/admin/media/media-picker-field";
 
 const POSITIONS = ["home", "promo", "strip", "campaign"] as const;
 const TONES = ["wine", "copper", "cream", "sage"] as const;
@@ -53,10 +54,10 @@ export function BannerForm({ row, onDone, onCancel }: { row: BannerDTO | null; o
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label={f("image")} hint={f("imageHint")} error={state.errors?.imageUrl}>
-          {(p) => <input {...p} name="imageUrl" dir="ltr" defaultValue={row?.imageUrl ?? ""} maxLength={500} placeholder="/uploads/…" className={inputClass} />}
+          {() => <MediaPickerField name="imageUrl" defaultValue={row?.imageUrl ?? ""} />}
         </Field>
         <Field label={t("fields.mobileImage")} hint={f("imageHint")} error={state.errors?.mobileImageUrl}>
-          {(p) => <input {...p} name="mobileImageUrl" dir="ltr" defaultValue={row?.mobileImageUrl ?? ""} maxLength={500} placeholder="/uploads/…" className={inputClass} />}
+          {() => <MediaPickerField name="mobileImageUrl" defaultValue={row?.mobileImageUrl ?? ""} />}
         </Field>
       </div>
 

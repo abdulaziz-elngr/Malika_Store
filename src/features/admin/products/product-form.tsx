@@ -9,6 +9,7 @@ import { useRouter } from "@/i18n/navigation";
 import { saveProductAction } from "@/server/actions/admin-catalog";
 import type { ActionState } from "@/server/actions/types";
 import type { ProductAdmin } from "@/server/services/admin-catalog";
+import { MediaPickerField } from "@/features/admin/media/media-picker-field";
 
 const TONES = ["wine", "copper", "cream", "sage"] as const;
 const STATUSES = ["draft", "published", "archived"] as const;
@@ -20,9 +21,9 @@ const blankImage = (): ImageRow => ({ url: "", tone: "wine", altAr: "", altEn: "
 const blankVariant = (): VariantRow => ({ sku: "", size: "", colorNameAr: "", colorNameEn: "", colorHex: "#67251b", price: "", stock: "0" });
 const egp = (minor: number | null | undefined) => (minor == null ? "" : String(minor / 100));
 
-type Option = { id: string; nameEn: string; nameAr: string };
+type Option = { id: string; nameEn: string; nameAr: string; audienceId?: string | null };
 
-export function ProductForm({ product, categories, collections, audiences }: { product: ProductAdmin | null; categories: Option[]; collections: Option[]; audiences: { slug: string; nameEn: string; nameAr: string }[] }) {
+export function ProductForm({ product, categories, collections, audiences }: { product: ProductAdmin | null; categories: Option[]; collections: Option[]; audiences: { id: string; slug: string; nameEn: string; nameAr: string }[] }) {
   const locale = useLocale();
   const t = useTranslations("admin.products");
   const f = useTranslations("admin.form");
@@ -41,6 +42,21 @@ export function ProductForm({ product, categories, collections, audiences }: { p
   const [isNew, setIsNew] = useState(product?.isNew ?? false);
   const [bestSeller, setBestSeller] = useState(product?.bestSeller ?? false);
   const [selectedCollections, setSelectedCollections] = useState<string[]>(() => product?.collections.map((c) => c.collectionId) ?? []);
+  // Categories and collections belong to an audience, so the pickers only offer the ones that fit the product's audience
+  // (plus general ones with no audience, and anything already assigned so an existing link is never hidden).
+  const [gender, setGender] = useState(product?.gender ?? "women");
+  const [categoryId, setCategoryId] = useState(product?.categoryId ?? "");
+  const audienceId = audiences.find((a) => a.slug === gender)?.id ?? null;
+  const fits = (o: Option) => !o.audienceId || o.audienceId === audienceId;
+  const categoryChoices = categories.filter((c) => fits(c) || c.id === categoryId);
+  const collectionChoices = collections.filter((c) => fits(c) || selectedCollections.includes(c.id));
+  const changeGender = (slug: string) => {
+    setGender(slug);
+    const next = audiences.find((a) => a.slug === slug)?.id ?? null;
+    // A category from another audience no longer applies once the audience changes.
+    const current = categories.find((c) => c.id === categoryId);
+    if (current?.audienceId && current.audienceId !== next) setCategoryId("");
+  };
 
   useEffect(() => {
     if (!state.ok) return;
@@ -112,7 +128,7 @@ export function ProductForm({ product, categories, collections, audiences }: { p
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label={t("gender")} error={state.errors?.gender}>
                 {(p) => (
-                  <select {...p} name="gender" defaultValue={product?.gender ?? "women"} className={inputClass}>
+                  <select {...p} name="gender" value={gender} onChange={(e) => changeGender(e.target.value)} className={inputClass}>
                     {audiences.map((g) => (
                       <option key={g.slug} value={g.slug}>
                         {locale === "ar" ? g.nameAr : g.nameEn}
@@ -123,9 +139,9 @@ export function ProductForm({ product, categories, collections, audiences }: { p
               </Field>
               <Field label={t("category")} error={state.errors?.categoryId}>
                 {(p) => (
-                  <select {...p} name="categoryId" defaultValue={product?.categoryId ?? ""} className={inputClass}>
+                  <select {...p} name="categoryId" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={inputClass}>
                     <option value="">{t("noCategory")}</option>
-                    {categories.map((c) => (
+                    {categoryChoices.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.nameEn}
                       </option>
@@ -197,7 +213,7 @@ export function ProductForm({ product, categories, collections, audiences }: { p
                 {(p) => <input {...p} name="tagsText" dir="auto" value={tagsText} onChange={(e) => setTagsText(e.target.value)} placeholder={t("tagsPlaceholder")} className={inputClass} />}
               </Field>
               <Field label={t("videoUrl")} error={state.errors?.videoUrl}>
-                {(p) => <input {...p} name="videoUrl" dir="ltr" defaultValue={product?.videoUrl ?? ""} maxLength={300} placeholder="/uploads/video.mp4" className={inputClass} />}
+                {() => <MediaPickerField kind="video" name="videoUrl" defaultValue={product?.videoUrl ?? ""} />}
               </Field>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -244,7 +260,7 @@ export function ProductForm({ product, categories, collections, audiences }: { p
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <Field label={t("imageUrl")} error={undefined} className="sm:col-span-2">
-                        {(p) => <input {...p} dir="ltr" value={im.url} onChange={(e) => setImages((rows) => patch(rows, i, { url: e.target.value }))} maxLength={500} placeholder="/uploads/…" className={inputClass} />}
+                        {() => <MediaPickerField hidePreview value={im.url} onChange={(url) => setImages((rows) => patch(rows, i, { url }))} />}
                       </Field>
                       <Field label={t("altAr")} error={undefined}>
                         {(p) => <input {...p} value={im.altAr} onChange={(e) => setImages((rows) => patch(rows, i, { altAr: e.target.value }))} maxLength={160} className={inputClass} />}
@@ -349,11 +365,11 @@ export function ProductForm({ product, categories, collections, audiences }: { p
         <section className="border border-line bg-surface">
           <header className="border-b border-line px-5 py-3 text-xs uppercase tracking-[0.2em] text-accent">{t("sections.collections")}</header>
           <div className="max-h-56 overflow-y-auto p-5">
-            {collections.length === 0 ? (
+            {collectionChoices.length === 0 ? (
               <p className="text-sm text-muted">{t("noCollections")}</p>
             ) : (
               <ul className="grid gap-2 sm:grid-cols-2">
-                {collections.map((c) => (
+                {collectionChoices.map((c) => (
                   <li key={c.id}>
                     <label className="flex cursor-pointer items-center gap-3 border border-line px-3 py-2 text-sm hover:border-accent">
                       <input type="checkbox" checked={selectedCollections.includes(c.id)} onChange={() => setSelectedCollections((ids) => toggle(ids, c.id))} className="size-4 accent-[var(--color-brand,#67251b)]" />

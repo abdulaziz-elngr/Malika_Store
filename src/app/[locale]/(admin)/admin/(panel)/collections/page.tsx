@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/admin/primitives";
 import type { Locale } from "@/i18n/routing";
 import { CollectionsManager } from "@/features/admin/collections/collections-manager";
 import { can, requirePermission } from "@/server/auth/rbac";
+import { listAudienceOptions } from "@/server/services/admin-audiences";
 import { allCollectionLinks, listCollectionsAdmin, productOptions } from "@/server/services/admin-catalog";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export const metadata: Metadata = { title: "Collections — MALIKA Admin" };
 export default async function CollectionsPage({ params }: { params: Promise<{ locale: Locale }> }) {
   setRequestLocale((await params).locale);
   const admin = await requirePermission("collections:view");
-  const [t, rows, links, products] = await Promise.all([getTranslations("admin.collections"), listCollectionsAdmin(), allCollectionLinks(), productOptions()]);
+  const [t, rows, links, products, audiences] = await Promise.all([getTranslations("admin.collections"), listCollectionsAdmin(), allCollectionLinks(), productOptions(), listAudienceOptions()]);
 
   const linkMap: Record<string, string[]> = {};
   for (const l of links) (linkMap[l.collectionId] ??= []).push(l.productId);
@@ -24,6 +25,7 @@ export default async function CollectionsPage({ params }: { params: Promise<{ lo
       <CollectionsManager
         rows={rows.map((r) => ({ ...r.c, productCount: r.productCount, productIds: linkMap[r.c.id] ?? [] }))}
         products={products}
+        audiences={audiences}
         canCreate={can(admin, "collections:create")}
         canEdit={can(admin, "collections:edit")}
         canDelete={can(admin, "collections:delete")}

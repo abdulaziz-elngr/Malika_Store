@@ -19,6 +19,8 @@ export const audiences = pgTable(
     includeUnisex: boolean("include_unisex").notNull().default(false),
     sortOrder: integer("sort_order").notNull().default(0),
     visible: boolean("visible").notNull().default(true),
+    /** Whether the audience gets its own entry (with a dropdown of its categories and collections) in the storefront header. */
+    showInHeader: boolean("show_in_header").notNull().default(true),
     ...timestamps,
   },
   (t) => [uniqueIndex("audience_slug_idx").on(t.slug)],
@@ -36,6 +38,8 @@ export const categories = pgTable(
     imageUrl: text("image_url"),
     tone: text("tone").notNull().default("wine"),
     parentId: uuid("parent_id"),
+    /** The audience (Women, Kids…) this category belongs to. Null = a general category shown under every audience. */
+    audienceId: uuid("audience_id").references(() => audiences.id, { onDelete: "set null" }),
     sortOrder: integer("sort_order").notNull().default(0),
     visible: boolean("visible").notNull().default(true),
     seoTitleAr: text("seo_title_ar"),
@@ -44,7 +48,7 @@ export const categories = pgTable(
     seoDescriptionEn: text("seo_description_en"),
     ...timestamps,
   },
-  (t) => [uniqueIndex("category_slug_idx").on(t.slug), index("category_parent_idx").on(t.parentId)],
+  (t) => [uniqueIndex("category_slug_idx").on(t.slug), index("category_parent_idx").on(t.parentId), index("category_audience_idx").on(t.audienceId)],
 );
 
 export const collections = pgTable(
@@ -59,6 +63,8 @@ export const collections = pgTable(
     coverUrl: text("cover_url"),
     bannerUrl: text("banner_url"),
     tone: text("tone").notNull().default("wine"),
+    /** The audience this collection belongs to (e.g. "Summer" → Kids). Null = a general collection shown under every audience. */
+    audienceId: uuid("audience_id").references(() => audiences.id, { onDelete: "set null" }),
     startsAt: timestamp("starts_at", { withTimezone: true }),
     endsAt: timestamp("ends_at", { withTimezone: true }),
     visible: boolean("visible").notNull().default(true),
@@ -68,7 +74,7 @@ export const collections = pgTable(
     seoDescriptionEn: text("seo_description_en"),
     ...timestamps,
   },
-  (t) => [uniqueIndex("collection_slug_idx").on(t.slug)],
+  (t) => [uniqueIndex("collection_slug_idx").on(t.slug), index("collection_audience_idx").on(t.audienceId)],
 );
 
 export const products = pgTable(
@@ -172,7 +178,8 @@ export const inventoryMovements = pgTable(
   (t) => [index("movement_variant_idx").on(t.variantId, t.createdAt)],
 );
 
-export const categoryRelations = relations(categories, ({ many }) => ({ products: many(products) }));
+export const audienceRelations = relations(audiences, ({ many }) => ({ categories: many(categories), collections: many(collections) }));
+export const categoryRelations = relations(categories, ({ one, many }) => ({ products: many(products), audience: one(audiences, { fields: [categories.audienceId], references: [audiences.id] }) }));
 export const productRelations = relations(products, ({ one, many }) => ({
   category: one(categories, { fields: [products.categoryId], references: [categories.id] }),
   images: many(productImages),
@@ -181,7 +188,7 @@ export const productRelations = relations(products, ({ one, many }) => ({
 }));
 export const productImageRelations = relations(productImages, ({ one }) => ({ product: one(products, { fields: [productImages.productId], references: [products.id] }) }));
 export const variantRelations = relations(productVariants, ({ one }) => ({ product: one(products, { fields: [productVariants.productId], references: [products.id] }) }));
-export const collectionRelations = relations(collections, ({ many }) => ({ products: many(productCollections) }));
+export const collectionRelations = relations(collections, ({ one, many }) => ({ products: many(productCollections), audience: one(audiences, { fields: [collections.audienceId], references: [audiences.id] }) }));
 export const productCollectionRelations = relations(productCollections, ({ one }) => ({
   product: one(products, { fields: [productCollections.productId], references: [products.id] }),
   collection: one(collections, { fields: [productCollections.collectionId], references: [collections.id] }),

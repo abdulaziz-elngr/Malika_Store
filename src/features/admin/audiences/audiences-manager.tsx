@@ -8,14 +8,13 @@ import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Drawer } from "@/components/admin/overlay";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
+import { audienceHref } from "@/lib/audience";
 import { deleteAudienceAction, moveAudienceAction } from "@/server/actions/admin-audiences";
 import { AudienceForm } from "./audience-form";
 import type { AudienceRow } from "./types";
 
 type Props = { rows: AudienceRow[]; canCreate: boolean; canEdit: boolean; canDelete: boolean };
 
-/** The storefront page that lists an audience's products. Women and Men keep their original pages. */
-const storefrontPath = (slug: string) => (slug === "women" ? "/women" : slug === "men" ? "/men" : `/for/${slug}`);
 
 export function AudiencesManager({ rows, canCreate, canEdit, canDelete }: Props) {
   const t = useTranslations("admin.audiences");
@@ -77,7 +76,7 @@ export function AudiencesManager({ rows, canCreate, canEdit, canDelete }: Props)
                     <p className="text-xs text-muted">{a.nameAr}</p>
                   </Td>
                   <Td dir="ltr" className="text-muted">
-                    {storefrontPath(a.slug)}
+                    {audienceHref(a.slug)}
                   </Td>
                   <Td className="text-muted">{a.productCount}</Td>
                   <Td>
@@ -106,8 +105,8 @@ export function AudiencesManager({ rows, canCreate, canEdit, canDelete }: Props)
                         <button
                           type="button"
                           onClick={() => setConfirm(a)}
-                          disabled={a.productCount > 0}
-                          title={a.productCount > 0 ? t("inUse") : undefined}
+                          disabled={a.productCount + a.categoryCount + a.collectionCount > 0}
+                          title={a.productCount + a.categoryCount + a.collectionCount > 0 ? t("inUse") : undefined}
                           aria-label={`${f("delete")} — ${a.nameEn}`}
                           className="grid size-8 place-items-center border border-line text-muted hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-30"
                         >

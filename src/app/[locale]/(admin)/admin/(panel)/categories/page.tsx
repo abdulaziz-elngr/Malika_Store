@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/admin/primitives";
 import { CategoriesManager } from "@/features/admin/catalog/categories-manager";
 import type { Locale } from "@/i18n/routing";
 import { can, requirePermission } from "@/server/auth/rbac";
+import { listAudienceOptions } from "@/server/services/admin-audiences";
 import { listCategoriesAdmin } from "@/server/services/admin-catalog";
 
 export const dynamic = "force-dynamic";
@@ -13,13 +14,14 @@ export const metadata: Metadata = { title: "Categories — MALIKA Admin" };
 export default async function CategoriesPage({ params }: { params: Promise<{ locale: Locale }> }) {
   setRequestLocale((await params).locale);
   const admin = await requirePermission("categories:view");
-  const [t, rows] = await Promise.all([getTranslations("admin.categories"), listCategoriesAdmin()]);
+  const [t, rows, audiences] = await Promise.all([getTranslations("admin.categories"), listCategoriesAdmin(), listAudienceOptions()]);
 
   return (
     <div className="space-y-8">
       <PageHeader eyebrow={t("eyebrow")} title={t("title")} description={t("intro")} />
       <CategoriesManager
         rows={rows.map((r) => ({ ...r.c, productCount: r.productCount }))}
+        audiences={audiences}
         canCreate={can(admin, "categories:create")}
         canEdit={can(admin, "categories:edit")}
         canDelete={can(admin, "categories:delete")}

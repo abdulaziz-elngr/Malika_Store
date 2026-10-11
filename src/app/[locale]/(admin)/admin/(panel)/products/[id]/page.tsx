@@ -34,8 +34,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ lo
       />
       <ProductForm
         product={product}
-        categories={cats.map((c) => ({ id: c.c.id, nameEn: c.c.nameEn, nameAr: c.c.nameAr }))}
-        collections={cols.map((c) => ({ id: c.c.id, nameEn: c.c.nameEn, nameAr: c.c.nameAr }))}
+        categories={cats.map((c) => ({ id: c.c.id, nameEn: c.c.nameEn, nameAr: c.c.nameAr, audienceId: c.c.audienceId }))}
+        collections={cols.map((c) => ({ id: c.c.id, nameEn: c.c.nameEn, nameAr: c.c.nameAr, audienceId: c.c.audienceId }))}
         audiences={auds}
       />
     </div>

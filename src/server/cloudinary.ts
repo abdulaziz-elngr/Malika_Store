@@ -49,3 +49,15 @@ export async function deleteFromCloudinary(url: string): Promise<void> {
   fd.set("signature", sign({ public_id: publicId, timestamp }));
   await fetch(`https://api.cloudinary.com/v1_1/${cloud()}/${kind}/destroy`, { method: "POST", body: fd });
 }
+
+/** Parameters the browser needs to upload straight to Cloudinary (the file never touches our serverless function). */
+export function signDirectUpload(opts: { folder: string; publicId: string; kind: "image" | "video" }) {
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const signature = sign({ folder: opts.folder, public_id: opts.publicId, timestamp });
+  return { endpoint: `https://api.cloudinary.com/v1_1/${cloud()}/${opts.kind}/upload`, apiKey: key(), timestamp, folder: opts.folder, publicId: opts.publicId, signature };
+}
+
+/** True only for delivery URLs inside OUR cloud and the malika/ upload folder. */
+export const isOwnCloudinaryUrl = (url: string, kind: "image" | "video") =>
+  cloudinaryEnabled() &&
+  new RegExp(`^https://res\\.cloudinary\\.com/${cloud().replace(/[^\w-]/g, "")}/${kind}/upload/(?:v\\d+/)?malika/\\d{4}-\\d{2}-\\d{2}/[0-9a-f-]{36}\\.[a-z0-9]{2,5}$`, "i").test(url);

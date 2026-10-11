@@ -176,10 +176,10 @@ export async function deleteProducts(actor: AdminSessionUser, ids: string[]) {
 export const listCategoriesAdmin = () =>
   db.select({ c: categories, productCount: sql<number>`(select count(*)::int from product p where p.category_id = "category"."id")` }).from(categories).orderBy(asc(categories.sortOrder), asc(categories.nameEn));
 
-export type CategoryInput = { nameAr: string; nameEn: string; slug: string; descriptionAr: string; descriptionEn: string; imageUrl: string | null; tone: string; parentId: string | null; visible: boolean; seoTitleAr: string; seoTitleEn: string; seoDescriptionAr: string; seoDescriptionEn: string };
+export type CategoryInput = { nameAr: string; nameEn: string; slug: string; descriptionAr: string; descriptionEn: string; imageUrl: string | null; tone: string; parentId: string | null; audienceId: string; visible: boolean; seoTitleAr: string; seoTitleEn: string; seoDescriptionAr: string; seoDescriptionEn: string };
 
 export async function saveCategory(actor: AdminSessionUser, id: string | null, input: CategoryInput) {
-  const values = { nameAr: input.nameAr, nameEn: input.nameEn, slug: input.slug || slugify(input.nameEn), descriptionAr: input.descriptionAr || null, descriptionEn: input.descriptionEn || null, imageUrl: input.imageUrl, tone: input.tone, parentId: input.parentId, visible: input.visible, seoTitleAr: input.seoTitleAr || null, seoTitleEn: input.seoTitleEn || null, seoDescriptionAr: input.seoDescriptionAr || null, seoDescriptionEn: input.seoDescriptionEn || null, updatedAt: new Date() };
+  const values = { nameAr: input.nameAr, nameEn: input.nameEn, slug: input.slug || slugify(input.nameEn), descriptionAr: input.descriptionAr || null, descriptionEn: input.descriptionEn || null, imageUrl: input.imageUrl, tone: input.tone, parentId: input.parentId, audienceId: input.audienceId, visible: input.visible, seoTitleAr: input.seoTitleAr || null, seoTitleEn: input.seoTitleEn || null, seoDescriptionAr: input.seoDescriptionAr || null, seoDescriptionEn: input.seoDescriptionEn || null, updatedAt: new Date() };
   let cid: string;
   if (id) {
     const [row] = await db.update(categories).set(values).where(eq(categories.id, id)).returning({ id: categories.id });
@@ -224,10 +224,10 @@ export const allCollectionLinks = () => db.select({ collectionId: productCollect
 
 export const getCollectionAdmin = (id: string) => db.query.collections.findFirst({ where: eq(collections.id, id) });
 
-export type CollectionInput = { nameAr: string; nameEn: string; slug: string; descriptionAr: string; descriptionEn: string; coverUrl: string | null; bannerUrl: string | null; tone: string; startsAt: string; endsAt: string; visible: boolean; productIds: string[]; seoTitleAr: string; seoTitleEn: string; seoDescriptionAr: string; seoDescriptionEn: string };
+export type CollectionInput = { nameAr: string; nameEn: string; slug: string; descriptionAr: string; descriptionEn: string; coverUrl: string | null; bannerUrl: string | null; tone: string; audienceId: string; startsAt: string; endsAt: string; visible: boolean; productIds: string[]; seoTitleAr: string; seoTitleEn: string; seoDescriptionAr: string; seoDescriptionEn: string };
 
 export async function saveCollection(actor: AdminSessionUser, id: string | null, input: CollectionInput) {
-  const values = { nameAr: input.nameAr, nameEn: input.nameEn, slug: input.slug || slugify(input.nameEn), descriptionAr: input.descriptionAr || null, descriptionEn: input.descriptionEn || null, coverUrl: input.coverUrl, bannerUrl: input.bannerUrl, tone: input.tone, startsAt: input.startsAt ? new Date(input.startsAt) : null, endsAt: input.endsAt ? new Date(input.endsAt) : null, visible: input.visible, seoTitleAr: input.seoTitleAr || null, seoTitleEn: input.seoTitleEn || null, seoDescriptionAr: input.seoDescriptionAr || null, seoDescriptionEn: input.seoDescriptionEn || null, updatedAt: new Date() };
+  const values = { nameAr: input.nameAr, nameEn: input.nameEn, slug: input.slug || slugify(input.nameEn), descriptionAr: input.descriptionAr || null, descriptionEn: input.descriptionEn || null, coverUrl: input.coverUrl, bannerUrl: input.bannerUrl, tone: input.tone, audienceId: input.audienceId, startsAt: input.startsAt ? new Date(input.startsAt) : null, endsAt: input.endsAt ? new Date(input.endsAt) : null, visible: input.visible, seoTitleAr: input.seoTitleAr || null, seoTitleEn: input.seoTitleEn || null, seoDescriptionAr: input.seoDescriptionAr || null, seoDescriptionEn: input.seoDescriptionEn || null, updatedAt: new Date() };
   let cid: string;
   if (id) {
     const [row] = await db.update(collections).set(values).where(eq(collections.id, id)).returning({ id: collections.id });

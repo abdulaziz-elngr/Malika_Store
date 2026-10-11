@@ -18,7 +18,7 @@ export default async function AudiencesPage({ params }: { params: Promise<{ loca
     <div className="space-y-8">
       <PageHeader eyebrow={t("eyebrow")} title={t("title")} description={t("intro")} />
       <AudiencesManager
-        rows={rows.map((r) => ({ id: r.a.id, slug: r.a.slug, nameAr: r.a.nameAr, nameEn: r.a.nameEn, includeUnisex: r.a.includeUnisex, visible: r.a.visible, sortOrder: r.a.sortOrder, productCount: r.productCount }))}
+        rows={rows.map((r) => ({ id: r.a.id, slug: r.a.slug, nameAr: r.a.nameAr, nameEn: r.a.nameEn, includeUnisex: r.a.includeUnisex, showInHeader: r.a.showInHeader, visible: r.a.visible, sortOrder: r.a.sortOrder, productCount: r.productCount, categoryCount: r.categoryCount, collectionCount: r.collectionCount }))}
         canCreate={can(admin, "categories:create")}
         canEdit={can(admin, "categories:edit")}
         canDelete={can(admin, "categories:delete")}

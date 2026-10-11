@@ -52,8 +52,9 @@ export async function OrderTimeline({ order }: { order: Pick<OrderDetails, "stat
   );
 }
 
-export async function OrderDetail({ order, heading }: { order: OrderDetails; heading?: React.ReactNode }) {
-  const [t, tc, loc] = await Promise.all([getTranslations("orders"), getTranslations("checkout"), getLocale() as Promise<Loc>]);
+/** `reviewStatuses` is passed only for a signed-in customer's own order; it enables the "rate this product" prompt once delivered. */
+export async function OrderDetail({ order, heading, reviewStatuses }: { order: OrderDetails; heading?: React.ReactNode; reviewStatuses?: Map<string, "pending" | "approved" | "rejected"> }) {
+  const [t, tc, tr, loc] = await Promise.all([getTranslations("orders"), getTranslations("checkout"), getTranslations("reviews"), getLocale() as Promise<Loc>]);
   return (
     <div className="space-y-12">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -76,6 +77,13 @@ export async function OrderDetail({ order, heading }: { order: OrderDetails; hea
               <div className="min-w-0 flex-1 text-sm">
                 <p className="font-display text-lg leading-snug"><Link href={`/products/${i.slug}`}>{pick(loc, i.nameAr, i.nameEn)}</Link></p>
                 <p className="mt-1 text-muted">{pick(loc, i.colorNameAr, i.colorNameEn)} · {i.size} · ×{i.quantity}</p>
+                {reviewStatuses && order.status === "delivered" && i.productId && (
+                  <p className="mt-2">
+                    <Link href={`/products/${i.slug}#reviews`} className="text-xs uppercase tracking-[0.18em] text-accent underline underline-offset-4 hover:text-foreground">
+                      {reviewStatuses.has(i.productId) ? tr("editYourReview") : tr("rateProduct")}
+                    </Link>
+                  </p>
+                )}
               </div>
               <p className="text-sm">{formatMoney(i.lineTotalMinor, loc)}</p>
             </li>

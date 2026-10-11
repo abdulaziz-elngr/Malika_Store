@@ -1,21 +1,23 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useActionState, useEffect } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Field, FormError, inputClass } from "@/components/ui/field";
 import { saveCategoryAction } from "@/server/actions/admin-catalog";
 import type { ActionState } from "@/server/actions/types";
-import type { CategoryRow } from "./types";
+import type { AudienceOption, CategoryRow } from "./types";
+import { MediaPickerField } from "@/features/admin/media/media-picker-field";
 
 const TONES = ["wine", "copper", "cream", "sage"] as const;
 
 /** Create/edit one category inside a Drawer. `onDone` closes the drawer and refreshes the list. */
-export function CategoryForm({ row, parents, onDone, onCancel }: { row: CategoryRow | null; parents: CategoryRow[]; onDone: () => void; onCancel: () => void }) {
+export function CategoryForm({ row, parents, audiences, onDone, onCancel }: { row: CategoryRow | null; parents: CategoryRow[]; audiences: AudienceOption[]; onDone: () => void; onCancel: () => void }) {
   const t = useTranslations("admin.categories");
   const f = useTranslations("admin.form");
   const router = useRouter();
+  const locale = useLocale();
   const [state, action, pending] = useActionState(saveCategoryAction, {} as ActionState);
 
   useEffect(() => {
@@ -38,6 +40,21 @@ export function CategoryForm({ row, parents, onDone, onCancel }: { row: Category
           {(p) => <input {...p} name="nameEn" dir="ltr" defaultValue={row?.nameEn} maxLength={80} required className={inputClass} />}
         </Field>
       </div>
+
+      <Field label={t("audience")} hint={t("audienceHint")} error={state.errors?.audienceId}>
+        {(p) => (
+          <select {...p} name="audienceId" defaultValue={row?.audienceId ?? ""} required className={inputClass}>
+            <option value="" disabled>
+              {t("audiencePlaceholder")}
+            </option>
+            {audiences.map((a) => (
+              <option key={a.id} value={a.id}>
+                {locale === "ar" ? a.nameAr : a.nameEn}
+              </option>
+            ))}
+          </select>
+        )}
+      </Field>
 
       <Field label={t("slug")} hint={t("slugHint")} error={state.errors?.slug}>
         {(p) => <input {...p} name="slug" dir="ltr" defaultValue={row?.slug} maxLength={80} placeholder="dresses" className={inputClass} />}
@@ -81,7 +98,7 @@ export function CategoryForm({ row, parents, onDone, onCancel }: { row: Category
       </div>
 
       <Field label={f("image")} hint={f("imageHint")} error={state.errors?.imageUrl}>
-        {(p) => <input {...p} name="imageUrl" dir="ltr" defaultValue={row?.imageUrl ?? ""} maxLength={500} placeholder="/uploads/…" className={inputClass} />}
+        {() => <MediaPickerField name="imageUrl" defaultValue={row?.imageUrl ?? ""} />}
       </Field>
 
       <label className="flex items-center gap-3 text-sm">

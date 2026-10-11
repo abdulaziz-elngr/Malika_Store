@@ -27,7 +27,12 @@ export const reviews = pgTable(
     featured: boolean("featured").notNull().default(false),
     ...timestamps,
   },
-  (t) => [index("review_product_idx").on(t.productId, t.status), index("review_status_idx").on(t.status, t.createdAt)],
+  (t) => [
+    index("review_product_idx").on(t.productId, t.status),
+    index("review_status_idx").on(t.status, t.createdAt),
+    // One review per signed-in customer per product (guest / legacy rows have a null customer and are unaffected).
+    uniqueIndex("review_customer_product_idx").on(t.customerId, t.productId),
+  ],
 );
 
 /** Promotional banners shown on the storefront. */
