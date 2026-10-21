@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { MetaEventBeacon } from "@/features/storefront/analytics/meta-pixel";
 import { Reveal } from "@/components/motion/reveal";
 import { buttonClasses } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
@@ -27,6 +28,7 @@ export async function ShopView({ pathname, searchParams, fixedGender, fixedColle
 
   return (
     <Container className="py-12 lg:py-16">
+      {query.q && <MetaEventBeacon event="Search" data={{ search_string: query.q }} />}
       {header}
       <div className="mt-10 grid gap-x-12 lg:grid-cols-[16rem_minmax(0,1fr)]">
         <FilterPanel facets={facets} total={total} hide={[...(fixedGender ? (["gender"] as const) : []), ...(fixedCollection ? (["collection"] as const) : [])]} />

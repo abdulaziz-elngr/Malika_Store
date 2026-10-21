@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { acceptedAddition, metaItems, trackMeta } from "@/lib/meta-pixel";
 import { MAX_LINE_QTY, type CartItem, type CartLine, type CartPricing } from "@/lib/cart-types";
 import type { DeliveryMethodId } from "@/lib/shipping";
 
@@ -53,8 +54,12 @@ function read(): Stored {
  * always come from the server (/api/cart/price), so a tampered localStorage can never change what is charged.
  */
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  // Track explicit additions only after the pricing server accepts their quantities.
+  const pendingAdds = useRef(new Map<string, { before: number; requested: number }>());
+  const itemsRef = useRef<CartItem[]>([]);
   const [ready, setReady] = useState(false);
   const [items, setItems] = useState<CartItem[]>([]);
+  itemsRef.current = items;
   const [coupon, setCoupon] = useState<string | null>(null);
   const [pricing, setPricing] = useState<CartPricing | null>(null);
   const [pricingLoading, setLoading] = useState(false);
@@ -112,7 +117,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         });
         if (!res.ok) throw new Error(String(res.status));
         const data = (await res.json()) as CartPricing;
-        if (ticket !== latest.current) return;
+        if (ctrl.signal.aborted || ticket !== latest.current) return;
+        for (const [variantId, pending] of pendingAdds.current) {
+          const line = data.lines.find((row) => row.variantId === variantId);
+          const accepted = acceptedAddition(line, pending.before, pending.requested);
+          if (line && accepted > 0) {
+            trackMeta("AddToCart", {
+              ...metaItems([{ ...line, quantity: accepted }]),
+              content_name: line.nameEn || line.nameAr,
+              value: line.unitPriceMinor * accepted / 100,
+            });
+          }
+          pendingAdds.current.delete(variantId);
+        }
         setPricing(data);
         setFailed(false);
         // Reconcile the stored cart with reality: drop vanished variants, clamp quantities to stock.
@@ -149,6 +166,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [ready, itemsKey, extrasKey, coupon]);
 
   const add = useCallback((variantId: string, quantity = 1, opts?: { openDrawer?: boolean }) => {
+    if (!Number.isInteger(quantity) || quantity < 1) return;
+    const previous = pendingAdds.current.get(variantId);
+    const before = itemsRef.current.find((item) => item.variantId === variantId)?.quantity ?? 0;
+    pendingAdds.current.set(variantId, { before: previous?.before ?? before, requested: (previous?.requested ?? 0) + quantity });
     setItems((cur) => {
       const found = cur.find((i) => i.variantId === variantId);
       return found ? cur.map((i) => (i.variantId === variantId ? { ...i, quantity: Math.min(MAX_LINE_QTY, i.quantity + quantity) } : i)) : [...cur, { variantId, quantity: Math.min(MAX_LINE_QTY, quantity) }];
@@ -156,11 +177,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (opts?.openDrawer !== false) setOpen(true);
   }, []);
   const setQuantity = useCallback((variantId: string, quantity: number) => {
+    pendingAdds.current.delete(variantId);
     if (quantity < 1) return setItems((cur) => cur.filter((i) => i.variantId !== variantId));
     setItems((cur) => cur.map((i) => (i.variantId === variantId ? { ...i, quantity: Math.min(MAX_LINE_QTY, quantity) } : i)));
   }, []);
-  const remove = useCallback((variantId: string) => setItems((cur) => cur.filter((i) => i.variantId !== variantId)), []);
+  const remove = useCallback((variantId: string) => {
+    pendingAdds.current.delete(variantId);
+    setItems((cur) => cur.filter((i) => i.variantId !== variantId));
+  }, []);
   const clear = useCallback(() => {
+    pendingAdds.current.clear();
     setItems([]);
     setCoupon(null);
     setPricing(null);

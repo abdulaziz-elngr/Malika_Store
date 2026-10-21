@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { buttonClasses } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
+import { MetaEventBeacon } from "@/features/storefront/analytics/meta-pixel";
+import { metaItems } from "@/lib/meta-pixel";
 import { OrderDetail } from "@/features/storefront/account/order-views";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -34,6 +36,12 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ l
         <h1 className="font-display text-5xl text-brand sm:text-6xl">{t("thanksTitle")}</h1>
         <p className="max-w-md text-muted">{t("thanksBody", { email: order.email })}</p>
       </div>
+      {!(["cancelled", "returned"].includes(order.status)) && !(["failed", "refunded"].includes(order.paymentStatus)) && (
+        <MetaEventBeacon event="Purchase" orderId={order.id} data={{
+          ...metaItems(order.items.map((item) => ({ productId: item.productId ?? item.sku, quantity: item.quantity, unitPriceMinor: item.unitPriceMinor }))),
+          value: order.totalMinor / 100,
+        }} />
+      )}
       <OrderDetail order={order} />
       <div className="mt-14 flex flex-wrap justify-center gap-4">
         <Link href="/shop" className={buttonClasses("primary")}>{t("continueShopping")}</Link>

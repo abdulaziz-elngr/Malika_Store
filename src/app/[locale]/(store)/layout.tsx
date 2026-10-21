@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { unsign } from "@/server/auth/secret";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -6,6 +8,7 @@ import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { WhatsAppButton } from "@/components/layout/whatsapp-button";
 import { CustomCursor } from "@/components/motion/custom-cursor";
+import { MetaPixel, MetaEventBeacon } from "@/features/storefront/analytics/meta-pixel";
 import { VisitBeacon } from "@/features/storefront/analytics/visit-beacon";
 import { CartDrawer } from "@/features/storefront/cart/cart-drawer";
 import { CartProvider } from "@/features/storefront/cart/cart-provider";
@@ -21,6 +24,7 @@ const navDefaults = { shop: "/shop", newArrivals: "/shop?sort=newest", collectio
 /** Storefront chrome: header, footer, cart drawer and the cart/wishlist state. The admin area has its own layout. */
 export default async function StoreLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params;
+  const registrationId = unsign((await cookies()).get("malika_meta_registration")?.value);
   if (!hasLocale(routing.locales, locale)) notFound();
   // Navigation CMS drives both menus; the components fall back to the default links when a menu is empty.
   const [headerNav, footerNav, audiences, n] = await Promise.all([getNav("header"), getNav("footer"), getHeaderAudiences(), getTranslations({ locale, namespace: "nav" })]);
@@ -37,6 +41,8 @@ export default async function StoreLayout({ children, params }: { children: Reac
   return (
     <WishlistProvider>
       <CartProvider>
+        <MetaPixel />
+        {registrationId && <MetaEventBeacon event="CompleteRegistration" orderId={registrationId} data={{ status: true }} />}
         <VisitBeacon />
         <Loader />
         <CustomCursor />

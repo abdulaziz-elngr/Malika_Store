@@ -3,12 +3,13 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import { useCart } from "@/features/storefront/cart/cart-provider";
 import { useWishlist } from "@/features/storefront/wishlist/wishlist-provider";
 import { useRouter } from "@/i18n/navigation";
+import { trackMeta } from "@/lib/meta-pixel";
 import { MAX_LINE_QTY } from "@/lib/cart-types";
 import { cn } from "@/lib/cn";
 import { formatMoney, pick, type Loc } from "@/lib/localize";
@@ -20,6 +21,15 @@ export type PanelVariant = { id: string; size: string; colorNameAr: string; colo
 type Props = { productId: string; name: string; basePrice: number; salePrice: number | null; images: PanelImage[]; variants: PanelVariant[] };
 
 export function ProductBuyPanel({ productId, name, basePrice, salePrice, images, variants }: Props) {
+  const viewed = useRef<string | null>(null);
+  useEffect(() => {
+    if (viewed.current === productId) return;
+    viewed.current = productId;
+    trackMeta("ViewContent", {
+      content_ids: [productId], content_type: "product", content_name: name,
+      value: (salePrice ?? basePrice) / 100, currency: "EGP",
+    });
+  }, [productId, name, salePrice, basePrice]);
   const t = useTranslations("product");
   const loc = useLocale() as Loc;
   const colors = useMemo(() => [...new Map(variants.map((v) => [v.colorHex, v])).values()], [variants]);

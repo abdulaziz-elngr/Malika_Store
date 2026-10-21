@@ -10,6 +10,7 @@ import { FormError } from "@/components/ui/field";
 import { useCart } from "@/features/storefront/cart/cart-provider";
 import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
+import { metaCart, trackMeta } from "@/lib/meta-pixel";
 import { paymentPlan } from "@/lib/payments";
 import { addressSchema, customerInfoSchema, deliverySchema, fieldErrors, normalizePhone, paymentSchema, transferSchema, type FieldErrors } from "@/lib/validation/checkout";
 import { placeOrderAction } from "@/server/actions/checkout";
@@ -45,6 +46,13 @@ export function CheckoutFlow({ customer, addresses, methods, payments }: Props) 
   const [formError, setFormError] = useState<string | undefined>();
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
+  const checkoutTracked = useRef(false);
+  const paymentTracked = useRef(false);
+  useEffect(() => {
+    if (!ready || !pricing || cart.pricingLoading || pricing.hasIssues || !pricing.lines.some((line) => line.quantity > 0) || checkoutTracked.current) return;
+    checkoutTracked.current = true;
+    trackMeta("InitiateCheckout", metaCart(pricing));
+  }, [ready, pricing, cart.pricingLoading]);
   const heading = useRef<HTMLHeadingElement>(null);
 
   const set = useCallback(<K extends keyof CheckoutForm>(k: K, v: CheckoutForm[K]) => {
@@ -90,6 +98,10 @@ export function CheckoutFlow({ customer, addresses, methods, payments }: Props) 
 
   const next = () => {
     if (key !== "review" && !validate(key)) return;
+    if (key === "payment" && pricing && !paymentTracked.current) {
+      paymentTracked.current = true;
+      trackMeta("AddPaymentInfo", { ...metaCart(pricing), payment_method: form.paymentMethod });
+    }
     setFormError(undefined);
     setStep((s) => Math.min(STEPS.length - 1, s + 1));
   };

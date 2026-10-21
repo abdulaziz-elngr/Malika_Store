@@ -1,5 +1,7 @@
 "use server";
 
+import { cookies } from "next/headers";
+import { sign } from "@/server/auth/secret";
 import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { fieldErrors } from "@/lib/validation/checkout";
@@ -45,6 +47,11 @@ export async function registerAction(_: ActionState, fd: FormData): Promise<Acti
   const res = await registerCustomer(parsed.data);
   if (!res.ok) return { errors: { email: "emailTaken" }, values };
   await createSession(res.id);
+  // A short-lived signed marker lets the destination page track successful registration.
+  (await cookies()).set("malika_meta_registration", sign(res.id), {
+    httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production",
+    path: "/", maxAge: 300,
+  });
   redirect({ href: safeNext(fd.get("next")), locale: await getLocale() });
   return { ok: true };
 }

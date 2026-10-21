@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/components/ui/toast";
+import { trackMeta } from "@/lib/meta-pixel";
 import { usePathname } from "@/i18n/navigation";
 
 const KEY = "malika.wishlist.v1";
@@ -84,12 +85,15 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         fetch("/api/wishlist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ op: on ? "add" : "remove", productId: id }) })
           .then((r) => {
             if (!r.ok) throw new Error();
+            if (on) trackMeta("AddToWishlist", { content_ids: [id], content_type: "product" });
           })
           .catch(() => {
             setIds(ids);
             writeLocal(ids);
             toast.push(t("syncFailed"), "error");
           });
+      } else if (on) {
+        trackMeta("AddToWishlist", { content_ids: [id], content_type: "product" });
       }
     },
     [ids, authenticated, toast, t],

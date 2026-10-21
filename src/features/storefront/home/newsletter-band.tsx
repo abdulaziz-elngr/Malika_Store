@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { buttonClasses } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { inputClass, useFieldError } from "@/components/ui/field";
+import { trackMeta } from "@/lib/meta-pixel";
 import { subscribeAction } from "@/server/actions/admin-content";
 import type { ActionState } from "@/server/actions/types";
 import type { SectionOverrides } from "./overrides";
@@ -15,7 +16,11 @@ export function NewsletterBand({ o }: { o?: SectionOverrides }) {
   const t = useTranslations("homeSections");
   const locale = useLocale();
   const ferr = useFieldError();
-  const [state, action, pending] = useActionState(subscribeAction, {} as ActionState);
+  const [state, action, pending] = useActionState(async (previous: ActionState, formData: FormData) => {
+    const result = await subscribeAction(previous, formData);
+    if (result.ok) trackMeta("Lead", { content_name: "Newsletter" });
+    return result;
+  }, {} as ActionState);
 
   const emailErr = state.errors?.email ? ferr(state.errors.email) : undefined;
   const formErr = state.errors?.form ? ferr(state.errors.form) : undefined;
