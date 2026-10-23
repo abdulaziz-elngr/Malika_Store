@@ -19,6 +19,7 @@ import { site } from "@/lib/site";
 import { BrandProvider } from "@/components/brand/brand-provider";
 import { DEFAULT_BRAND, DEFAULT_THEME, getBrandSettings, getThemeSettings, type ThemeMode, type ThemeSettings } from "@/server/services/settings";
 import Script from "next/script";
+import { GTM_ID } from "@/lib/meta-pixel";
 
 const HEX = /^#[0-9a-f]{6}$/i;
 const VARS: [keyof ThemeMode, string][] = [
@@ -89,24 +90,21 @@ export default async function LocaleLayout({ children, params }: { children: Rea
     <html lang={locale} dir={localeDir(locale)} suppressHydrationWarning>
       <head>{themeCss ? <style id="malika-theme" dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}</head>
       <body className="min-h-dvh">
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
         <Script
-  id="meta-pixel"
-  strategy="afterInteractive"
-  dangerouslySetInnerHTML={{
-    __html: `
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window,document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '1806362550515023');
-      fbq('track', 'PageView');
-    `,
-  }}
-/>
+          id="gtm"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${GTM_ID}');`,
+          }}
+        />
         <NextIntlClientProvider>
           <Providers>
             <BrandProvider value={{ logoUrl: brand.logoUrl, logoDarkUrl: brand.logoDarkUrl }}>

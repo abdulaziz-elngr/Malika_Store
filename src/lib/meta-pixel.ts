@@ -1,54 +1,22 @@
 import type { CartLine, CartPricing } from "@/lib/cart-types";
 
-export const META_PIXEL_ID = "1806362550515023";
 export type MetaEvent = "PageView" | "ViewContent" | "Search" | "AddToCart" | "AddToWishlist" | "InitiateCheckout" | "AddPaymentInfo" | "Purchase" | "Contact" | "CompleteRegistration" | "Lead";
 export type MetaData = Record<string, unknown>;
-type Fbq = ((...args: unknown[]) => void) & {
-  callMethod?: (...args: unknown[]) => void;
-  queue: unknown[][];
-  push?: Fbq;
-  loaded: boolean;
-  version: string;
-};
 declare global {
-  interface Window { fbq?: Fbq; _fbq?: Fbq; }
+  interface Window { dataLayer?: Record<string, unknown>[]; }
 }
 
-let initialized = false;
+/** Google Tag Manager container. Tags (Meta Pixel, Google Ads, GA4...) are configured inside GTM, not in code. */
+export const GTM_ID = "GTM-N5NWWDJZ";
+
 const purchases = new Set<string>();
 
-function pixel() {
-  if (typeof window === "undefined") return;
-  if (!window.fbq) {
-    const queue = function (...args: unknown[]) {
-      if (queue.callMethod) queue.callMethod(...args);
-      else queue.queue.push(args);
-    } as Fbq;
-    queue.queue = [];
-    queue.push = queue;
-    queue.loaded = true;
-    queue.version = "2.0";
-    window.fbq = queue;
-    window._fbq ??= queue;
-    const script = document.createElement("script");
-    script.async = true;
-    script.src = "https://connect.facebook.net/en_US/fbevents.js";
-    document.head.appendChild(script);
-  }
-  if (!initialized) {
-    window.fbq("init", META_PIXEL_ID);
-    initialized = true;
-  }
-  return window.fbq;
-}
-
-/** Analytics failures must never interrupt cart or checkout. */
+/** Analytics failures must never interrupt cart or checkout. Events are pushed to the GTM dataLayer. */
 export function trackMeta(event: MetaEvent, data: MetaData = {}, eventId?: string) {
   try {
-    const fbq = pixel();
-    if (!fbq) return false;
-    if (eventId) fbq("track", event, data, { eventID: eventId });
-    else fbq("track", event, data);
+    if (typeof window === "undefined") return false;
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push(eventId ? { ...data, event, event_id: eventId } : { ...data, event });
     return true;
   } catch { return false; }
 }

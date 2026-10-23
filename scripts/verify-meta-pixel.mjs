@@ -8,12 +8,10 @@ const source = stripTypeScriptTypes(readFileSync(new URL("../src/lib/meta-pixel.
   .replace(/^export /gm, "");
 function browser({ blockedStorage = false, storage = new Map(), failScript = false } = {}) {
   const scripts = [];
+  const window = {};
+  if (failScript) Object.defineProperty(window, "dataLayer", { get: () => { throw Error("blocked"); }, set: () => { throw Error("blocked"); } });
   const context = vm.createContext({
-    window: {},
-    document: {
-      createElement: () => ({}),
-      head: { appendChild: (script) => { if (failScript) throw Error("blocked"); scripts.push(script); } },
-    },
+    window,
     localStorage: {
       getItem: (key) => { if (blockedStorage) throw Error("blocked"); return storage.get(key) ?? null; },
       setItem: (key, value) => { if (blockedStorage) throw Error("blocked"); storage.set(key, value); },
@@ -24,13 +22,13 @@ function browser({ blockedStorage = false, storage = new Map(), failScript = fal
 }
 const plain = (value) => JSON.parse(JSON.stringify(value));
 
-test("one loader and init; events queue safely before the Meta library loads", () => {
+test("events are pushed to the GTM dataLayer in order and no Meta library is loaded directly", () => {
   const b = browser();
   b.run('trackMeta("PageView"); trackMeta("Search", { search_string: "dress" })');
-  assert.equal(b.scripts.length, 1);
-  assert.equal(b.scripts[0].src, "https://connect.facebook.net/en_US/fbevents.js");
-  assert.deepEqual(plain(b.context.window.fbq.queue).map((row) => row.slice(0, 2)), [
-    ["init", "1806362550515023"], ["track", "PageView"], ["track", "Search"],
+  assert.equal(b.scripts.length, 0);
+  assert.equal(b.context.window.fbq, undefined);
+  assert.deepEqual(plain(b.context.window.dataLayer), [
+    { event: "PageView" }, { search_string: "dress", event: "Search" },
   ]);
 });
 
@@ -56,9 +54,9 @@ test("accepted additions exclude out-of-stock, missing, unchanged and stock-capp
 test("purchase repeats and remounts are deduplicated; different orders are counted", () => {
   const b = browser();
   b.run('trackPurchase("order-1", {value:500,currency:"EGP"}); trackPurchase("order-1", {}); trackPurchase("order-2", {})');
-  const events = plain(b.context.window.fbq.queue).filter((row) => row[1] === "Purchase");
+  const events = plain(b.context.window.dataLayer).filter((row) => row.event === "Purchase");
   assert.equal(events.length, 2);
-  assert.equal(events[0][3].eventID, "purchase_order-1");
+  assert.equal(events[0].event_id, "purchase_order-1");
   const reload = browser({ storage: b.storage });
   reload.run('trackPurchase("order-1", {})');
   assert.equal(reload.scripts.length, 0);
@@ -67,7 +65,7 @@ test("purchase repeats and remounts are deduplicated; different orders are count
 test("registration has its own deduplication key; storage denial does not break purchases", () => {
   const b = browser({ blockedStorage: true });
   b.run('trackOnceMeta("CompleteRegistration", "id1", {}); trackOnceMeta("CompleteRegistration", "id1", {}); trackPurchase("id1", {}); trackPurchase("id1", {})');
-  const events = plain(b.context.window.fbq.queue).filter((row) => row[0] === "track");
+  const events = plain(b.context.window.dataLayer);
   assert.equal(events.length, 2);
 });
 

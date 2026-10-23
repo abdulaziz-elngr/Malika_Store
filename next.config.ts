@@ -8,12 +8,13 @@ const prod = process.env.NODE_ENV === "production";
 // Next.js needs inline bootstrap scripts, so script-src keeps 'unsafe-inline' (a nonce-based policy is a later hardening step).
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' https://connect.facebook.net${prod ? "" : " 'unsafe-eval'"}`,
+  `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net${prod ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "media-src 'self' blob: https:",
-  "connect-src 'self' https://api.cloudinary.com https://www.facebook.com https://connect.facebook.net",
+  "connect-src 'self' https://api.cloudinary.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://*.g.doubleclick.net https://www.facebook.com https://connect.facebook.net",
+  "frame-src https://www.googletagmanager.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
