@@ -19,9 +19,21 @@ const phone = z
     if (!n) ctx.addIssue({ code: "custom", message: "phone" });
     return n ?? "";
   });
-const email = z.string().trim().toLowerCase().min(1, "required").max(160, "tooLong").pipe(z.email("email"));
+/** Optional at checkout: blank is fine, anything else must be a real address. */
+const optionalEmail = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .max(160, "tooLong")
+  .refine((v) => v === "" || z.email().safeParse(v).success, "email")
+  .optional()
+  .default("");
 
-export const customerInfoSchema = z.object({ name: text(2, 80), email, phone });
+export const customerInfoSchema = z.object({ name: text(2, 80), email: optionalEmail, phone, phone2: phone });
+/** The second number is only useful when it is a different line. */
+export const distinctPhones = (v: { phone: string; phone2: string }, ctx: z.RefinementCtx) => {
+  if (v.phone && v.phone === v.phone2) ctx.addIssue({ code: "custom", path: ["phone2"], message: "phoneSame" });
+};
 export const addressSchema = z.object({
   governorate: z.enum(GOVERNORATE_KEYS, "required"),
   city: text(2, 80),
@@ -31,18 +43,24 @@ export const addressSchema = z.object({
 });
 export const deliverySchema = z.object({ deliveryMethod: z.enum(DELIVERY_IDS, "required") });
 export const paymentSchema = z.object({ paymentMethod: z.string().min(1, "required").max(30) });
-/** Present only when the chosen method needs a transfer (wallet / InstaPay, or a cash-on-delivery deposit). The server decides whether it is required. */
+/** Present only when the chosen method needs a transfer (wallet / InstaPay). The server decides whether it is required. */
 export const transferSchema = z.object({
   transferChannel: z.enum(["wallet", "instapay"]).optional(),
   senderPhone: z.string().trim().max(30).optional().default(""),
   receiptToken: z.string().max(600).optional().default(""),
 });
 
-export const checkoutSchema = customerInfoSchema.extend(addressSchema.shape).extend(deliverySchema.shape).extend(paymentSchema.shape).extend(transferSchema.shape).extend({
-  coupon: z.string().trim().max(40).optional().default(""),
-  saveAddress: z.boolean().optional().default(false),
-  items: z.array(z.object({ variantId: z.uuid(), quantity: z.number().int().min(1).max(10) })).min(1, "emptyCart").max(30),
-});
+/** Everything the customer fills in on the checkout page (contact, address, payment). */
+export const detailsSchema = customerInfoSchema.extend(addressSchema.shape).extend(paymentSchema.shape).extend(transferSchema.shape);
+
+export const checkoutSchema = detailsSchema
+  .extend(deliverySchema.shape)
+  .extend({
+    coupon: z.string().trim().max(40).optional().default(""),
+    saveAddress: z.boolean().optional().default(false),
+    items: z.array(z.object({ variantId: z.uuid(), quantity: z.number().int().min(1).max(10) })).min(1, "emptyCart").max(30),
+  })
+  .superRefine(distinctPhones);
 
 export type CheckoutInput = z.input<typeof checkoutSchema>;
 export type FieldErrors = Record<string, string>;

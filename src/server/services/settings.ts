@@ -14,7 +14,7 @@ export type BrandSettings = { logoUrl: string; logoDarkUrl: string; faviconUrl: 
 export type SocialLinks = { instagram: string; tiktok: string; facebook: string; x: string; whatsapp: string };
 export type SeoSettings = { titleAr: string; titleEn: string; descriptionAr: string; descriptionEn: string; ogImage: string; robots: boolean; social: SocialLinks };
 export type OrderAlertSettings = { enabled: boolean; emails: string[] };
-export type ShippingSettings = { standardMinor: number; freeThresholdMinor: number; standardMinDays: number; standardMaxDays: number };
+export type ShippingSettings = { standardMinor: number; standardMinDays: number; standardMaxDays: number };
 
 /** Defaults are the MALIKA identity: sampled from the logo, exactly what ships in globals.css. */
 export const DEFAULT_THEME: ThemeSettings = {
@@ -36,7 +36,7 @@ export const DEFAULT_SEO: SeoSettings = {
   social: { instagram: "", tiktok: "", facebook: "", x: "", whatsapp: "" },
 };
 
-export const DEFAULT_SHIPPING: ShippingSettings = { standardMinor: 6000, freeThresholdMinor: 300000, standardMinDays: 2, standardMaxDays: 5 };
+export const DEFAULT_SHIPPING: ShippingSettings = { standardMinor: 11000, standardMinDays: 2, standardMaxDays: 5 };
 
 /** Who is emailed the moment a customer places an order (managed from Admin → Settings). */
 export const DEFAULT_ORDER_ALERTS: OrderAlertSettings = { enabled: true, emails: [] };

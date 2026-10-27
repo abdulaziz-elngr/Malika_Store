@@ -17,7 +17,7 @@ export type OrderListItem = {
   id: string;
   seq: number;
   name: string;
-  email: string;
+  email: string | null;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   totalMinor: number;

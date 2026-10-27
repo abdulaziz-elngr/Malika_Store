@@ -283,7 +283,8 @@
     "ratingRequired": "Please choose a star rating.",
     "reviewShort": "Please write at least a few words.",
     "reviewLogin": "Please sign in to leave a review.",
-    "reviewNotEligible": "Only customers who have received this piece can review it."
+    "reviewNotEligible": "Only customers who have received this piece can review it.",
+    "phoneSame": "Enter a different number from the first mobile number."
   },
   "wishlist": {
     "added": "Saved to your wishlist",
@@ -322,8 +323,6 @@
     "shippingAtCheckout": "Calculated at checkout",
     "free": "Free",
     "total": "Total",
-    "freeShippingAway": "You are {amount} away from free delivery",
-    "freeShippingReached": "You have unlocked free delivery",
     "couponLabel": "Coupon code",
     "couponPlaceholder": "Coupon code",
     "apply": "Apply",
@@ -346,9 +345,9 @@
     "title": "Checkout",
     "progress": "Checkout progress",
     "steps": {
+      "details": "Your order",
       "info": "Your details",
       "address": "Shipping address",
-      "delivery": "Delivery",
       "payment": "Payment",
       "review": "Review"
     },
@@ -364,8 +363,8 @@
     "governorate": "Governorate",
     "select": "Select…",
     "city": "City / area",
-    "line1": "Street address",
-    "line1Placeholder": "Street, building, apartment",
+    "line1": "Full address",
+    "line1Placeholder": "Street, building number, floor, apartment and a landmark",
     "line2": "Landmark (optional)",
     "notes": "Delivery notes (optional)",
     "notesPlaceholder": "Anything the courier should know",
@@ -374,17 +373,14 @@
       "standard": "Standard delivery",
       "express": "Express delivery"
     },
-    "deliveryEta": "{min}–{max} working days",
     "free": "Free",
-    "freeShippingNote": "Delivery is free on orders of {amount} or more.",
     "payment": {
       "cod": "Cash on delivery",
-      "codBody": "Pay in cash when your order arrives.",
-      "codDepositBody": "Transfer a deposit of {deposit} now; pay the remaining {due} in cash on delivery.",
-      "wallet": "Mobile wallet",
-      "walletBody": "Transfer the full amount from your mobile wallet and upload the receipt.",
+      "codBody": "Pay the full amount in cash when your order arrives.",
+      "wallet": "Vodafone Cash",
+      "walletBody": "Transfer the full amount with Vodafone Cash and upload the transfer screenshot.",
       "instapay": "InstaPay",
-      "instapayBody": "Transfer the full amount with InstaPay and upload the receipt.",
+      "instapayBody": "Transfer the full amount with InstaPay and upload the transfer screenshot.",
       "card": "Credit / debit card"
     },
     "choosePayment": "Please choose an available payment method.",
@@ -406,7 +402,6 @@
     "createAccount": "Create an account",
     "transfer": {
       "title": "Amount to transfer now",
-      "depositNote": "This deposit is deducted from your order total. The remaining {due} is paid in cash on delivery.",
       "fullNote": "Transfer the full order total, then upload the receipt below.",
       "channel": "Transfer through",
       "chooseChannel": "Choose how you will transfer.",
@@ -431,13 +426,14 @@
         "failed": "The upload failed. Please try again."
       },
       "reviewPaidNow": "Transferred now: {amount} ({channel})",
-      "reviewFrom": "From number: {phone}",
-      "reviewDue": "Due on delivery: {amount}"
+      "reviewFrom": "From number: {phone}"
     },
-    "summaryDeposit": "Deposit (by transfer)",
-    "summaryPaidByTransfer": "Paid by transfer",
-    "summaryDue": "Due on delivery",
-    "transferNote": "Your order is confirmed once we have checked your transfer receipt. Prices and stock are confirmed when you place the order."
+    "transferNote": "Your order is confirmed once we have checked your transfer receipt. Prices and stock are confirmed when you place the order.",
+    "phone2": "Second mobile number",
+    "phone2Hint": "Another number we can call if the first is unavailable.",
+    "emailOptional": "Email (optional)",
+    "shippingFlat": "Shipping to every governorate: {amount}.",
+    "thanksBodyNoEmail": "Your order is placed. We will call you on your mobile number to confirm it shortly."
   },
   "orders": {
     "orderNumber": "Order number",
@@ -1321,9 +1317,7 @@
       "intro": "Store-wide defaults: delivery price and window, payment accounts and the low-stock cut-off.",
       "readOnly": "You can review these settings, but only accounts with the settings-management permission can change them.",
       "shippingTitle": "Delivery rate & window",
-      "standardFee": "Standard delivery fee (EGP)",
-      "freeThreshold": "Free-shipping threshold (EGP)",
-      "freeThresholdHint": "Orders at or above this amount ship free.",
+      "standardFee": "Shipping fee (EGP)",
       "standardMinDays": "Standard — minimum days",
       "standardMaxDays": "Standard — maximum days",
       "lowStockTitle": "Low-stock threshold",
@@ -1363,10 +1357,9 @@
         "wallet": "Mobile wallet numbers",
         "walletHint": "One per line, e.g. 01012345678 — Vodafone Cash. Shown to the customer exactly as written.",
         "instapay": "InstaPay accounts",
-        "instapayHint": "One per line — an InstaPay address or the number linked to it.",
-        "deposit": "Cash-on-delivery deposit (EGP)",
-        "depositHint": "Customers who choose cash on delivery transfer this amount first and upload the receipt; it is deducted from what the courier collects. Leave empty or 0 for no deposit. A deposit needs at least one wallet or InstaPay account."
-      }
+        "instapayHint": "One per line — an InstaPay address or the number linked to it."
+      },
+      "standardFeeHint": "One flat fee for every governorate and every order."
     },
     "theme": {
       "eyebrow": "Design",

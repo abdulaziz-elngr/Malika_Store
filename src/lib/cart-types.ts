@@ -36,8 +36,6 @@ export type CartPricing = {
   shippingOptions: Record<string, number> | null; // cost of every delivery method for this cart (null for an empty cart)
   totalMinor: number;
   coupon: CouponStatus | null;
-  freeShippingRemainingMinor: number;
-  freeShippingThresholdMinor: number; // admin-managed
   deliveryWindow: { minDays: number; maxDays: number }; // admin-managed
   hasIssues: boolean;
 };

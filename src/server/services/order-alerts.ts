@@ -50,7 +50,8 @@ function buildOrderEmail(order: OrderDetails) {
       <table style="width:100%;border-collapse:collapse;font-size:15px">
         ${line("الاسم", esc(order.name))}
         ${line("الهاتف", `<span dir="ltr">${esc(order.phone)}</span>`)}
-        ${line("البريد", `<span dir="ltr">${esc(order.email)}</span>`)}
+        ${order.phone2 ? line("هاتف آخر", `<span dir="ltr">${esc(order.phone2)}</span>`) : ""}
+        ${order.email ? line("البريد", `<span dir="ltr">${esc(order.email)}</span>`) : ""}
         ${line("العنوان", esc(address))}
         ${order.notes ? line("ملاحظات", esc(order.notes)) : ""}
       </table>
@@ -84,7 +85,8 @@ function buildOrderEmail(order: OrderDetails) {
     "",
     `العميل: ${order.name}`,
     `الهاتف: ${order.phone}`,
-    `البريد: ${order.email}`,
+    order.phone2 ? `هاتف آخر: ${order.phone2}` : "",
+    order.email ? `البريد: ${order.email}` : "",
     `العنوان: ${address}`,
     order.notes ? `ملاحظات: ${order.notes}` : "",
     "",
@@ -108,7 +110,7 @@ function buildOrderEmail(order: OrderDetails) {
     .filter((l, i, a) => l !== "" || a[i - 1] !== "")
     .join("\n");
 
-  return { subject: `طلب جديد ${number} — ${money(order.totalMinor)}`, html, text, replyTo: order.email };
+  return { subject: `طلب جديد ${number} — ${money(order.totalMinor)}`, html, text, replyTo: order.email ?? undefined };
 }
 
 /**

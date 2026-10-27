@@ -97,7 +97,7 @@ export async function OrderDetail({ order, heading, reviewStatuses }: { order: O
           <p>{order.name}</p>
           <p className="text-muted">{order.line1}{order.line2 ? `، ${order.line2}` : ""}</p>
           <p className="text-muted">{order.city}، {governorateName(order.governorate, loc)}</p>
-          <p dir="ltr" className="text-start text-muted">{order.phone}</p>
+          <p dir="ltr" className="text-start text-muted">{order.phone}{order.phone2 ? ` · ${order.phone2}` : ""}</p>
           <p className="pt-2 text-muted">{tc(`delivery.${order.deliveryMethod}` as never)} · {tc(`payment.${order.paymentMethod}` as never)} · {t(`payment.${order.paymentStatus}` as never)}</p>
           {order.notes && <p className="pt-2 text-muted">“{order.notes}”</p>}
         </section>

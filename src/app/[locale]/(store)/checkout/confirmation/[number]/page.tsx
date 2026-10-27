@@ -34,7 +34,7 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ l
       <div className="mb-14 grid justify-items-center gap-4 text-center">
         <CheckCircle2 size={44} strokeWidth={1} className="text-accent" aria-hidden />
         <h1 className="font-display text-5xl text-brand sm:text-6xl">{t("thanksTitle")}</h1>
-        <p className="max-w-md text-muted">{t("thanksBody", { email: order.email })}</p>
+        <p className="max-w-md text-muted">{order.email ? t("thanksBody", { email: order.email }) : t("thanksBodyNoEmail")}</p>
       </div>
       {!(["cancelled", "returned"].includes(order.status)) && !(["failed", "refunded"].includes(order.paymentStatus)) && (
         <MetaEventBeacon event="Purchase" orderId={order.id} data={{
