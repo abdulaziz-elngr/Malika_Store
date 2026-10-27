@@ -228,7 +228,7 @@ export async function saveShippingAction(_: ActionState, fd: FormData): Promise<
 
 export async function savePaymentsAction(_: ActionState, fd: FormData): Promise<ActionState> {
   const admin = await authorize("settings:manage_settings");
-  const parsed = paymentSettingsSchema.safeParse({ walletAccounts: str(fd, "walletAccounts"), instapayAccounts: str(fd, "instapayAccounts"), deposit: str(fd, "deposit") });
+  const parsed = paymentSettingsSchema.safeParse({ walletAccounts: str(fd, "walletAccounts"), instapayAccounts: str(fd, "instapayAccounts"), deposit: str(fd, "deposit"), depositEnabled: str(fd, "depositEnabled") === "true" });
   if (!parsed.success) return { errors: fieldErrors(parsed.error) };
 
   const payments: PaymentSettings = parsed.data;
@@ -237,8 +237,8 @@ export async function savePaymentsAction(_: ActionState, fd: FormData): Promise<
     action: "settings.payments",
     entity: "site_setting",
     entityId: "payments",
-    summary: `Updated payment accounts (wallet ${payments.walletAccounts.length}, InstaPay ${payments.instapayAccounts.length}) and COD deposit`,
-    after: { walletAccounts: payments.walletAccounts, instapayAccounts: payments.instapayAccounts, depositMinor: payments.depositMinor },
+    summary: `Updated payment accounts (wallet ${payments.walletAccounts.length}, InstaPay ${payments.instapayAccounts.length}) and COD deposit (${payments.depositEnabled ? "on" : "off"})`,
+    after: { walletAccounts: payments.walletAccounts, instapayAccounts: payments.instapayAccounts, depositEnabled: payments.depositEnabled, depositMinor: payments.depositMinor },
   });
   // Checkout reads these live, and the order screens show the amounts.
   revalidatePath("/", "layout");

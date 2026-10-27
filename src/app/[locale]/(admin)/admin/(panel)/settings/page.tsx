@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/admin/primitives";
 import type { Locale } from "@/i18n/routing";
 import { LowStockCard } from "@/features/admin/settings/low-stock-card";
 import { OrderAlertsCard } from "@/features/admin/settings/order-alerts-card";
+import { isDepositEnabled } from "@/lib/payments";
 import { PaymentsCard } from "@/features/admin/settings/payments-card";
 import { ShippingCard } from "@/features/admin/settings/shipping-card";
 import { can, requirePermission } from "@/server/auth/rbac";
@@ -35,7 +36,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
         readOnly={readOnly}
       />
       <PaymentsCard
-        defaults={{ walletAccounts: payments.walletAccounts.join("\n"), instapayAccounts: payments.instapayAccounts.join("\n"), deposit: payments.depositMinor > 0 ? egp(payments.depositMinor) : "" }}
+        defaults={{ walletAccounts: payments.walletAccounts.join("\n"), instapayAccounts: payments.instapayAccounts.join("\n"), deposit: payments.depositMinor > 0 ? egp(payments.depositMinor) : "", depositEnabled: isDepositEnabled(payments) }}
         readOnly={readOnly}
       />
       <OrderAlertsCard emails={alerts.emails} enabled={alerts.enabled} mailReady={isMailConfigured()} readOnly={readOnly} />

@@ -89,7 +89,7 @@ async function main() {
   const w0 = await placeOrder({ ...pay, paymentMethod: "wallet", transferChannel: "wallet", senderPhone: "01033333333", receiptToken: proof }, null, "en");
   check("wallet rejected while no wallet number is configured", !w0.ok && w0.code === "payment", w0);
 
-  await setSetting(db, "payments", { walletAccounts: ["01012345678 — Vodafone Cash"], instapayAccounts: [], depositMinor: 20000 });
+  await setSetting(db, "payments", { walletAccounts: ["01012345678 — Vodafone Cash"], instapayAccounts: [], depositEnabled: true, depositMinor: 20000 });
   const noProof = await placeOrder({ ...pay, paymentMethod: "cod" }, null, "en");
   check("COD with a deposit needs the receipt + sender number", !noProof.ok && noProof.code === "proof", noProof);
   const forged = await placeOrder({ ...pay, paymentMethod: "cod", transferChannel: "wallet", senderPhone: "01033333333", receiptToken: "/uploads/receipts/evil.jpg.AAAA" }, null, "en");
@@ -109,9 +109,17 @@ async function main() {
     const [o] = await db.select().from(orders).where(eq(orders.seq, Number(wal.number.slice(4)))).limit(1);
     check("wallet order prepays the full total", !!o && o.prepaidMinor === o.totalMinor && o.paymentStatus === "pending", o && { p: o.prepaidMinor, t: o.totalMinor });
   }
-  await setSetting(db, "payments", { walletAccounts: [], instapayAccounts: [], depositMinor: 0 });
+  // Switch OFF but amount still saved + wallet still configured → plain COD, no deposit, no receipt.
+  await setSetting(db, "payments", { walletAccounts: ["01012345678 — Vodafone Cash"], instapayAccounts: [], depositEnabled: false, depositMinor: 20000 });
+  const switchedOff = await placeOrder({ ...pay, paymentMethod: "cod" }, null, "en");
+  check("deposit switch off → plain COD needs no receipt even with an amount saved", switchedOff.ok, switchedOff);
+  if (switchedOff.ok) {
+    const [o] = await db.select().from(orders).where(eq(orders.seq, Number(switchedOff.number.slice(4)))).limit(1);
+    check("deposit switch off → nothing prepaid", !!o && o.prepaidMinor === 0, o?.prepaidMinor);
+  }
+  await setSetting(db, "payments", { walletAccounts: [], instapayAccounts: [], depositEnabled: false, depositMinor: 0 });
   const off = await placeOrder({ ...pay, paymentMethod: "cod" }, null, "en");
-  check("deposit off → plain COD needs no receipt", off.ok, off);
+  check("no accounts + no deposit → plain COD needs no receipt", off.ok, off);
 
   const count = (await db.select().from(orders)).length;
   console.log(`orders in DB: ${count}`);

@@ -2,8 +2,9 @@
  * Payment rules shared by the storefront (what to show) and the server (what to trust).
  *
  * Methods:
- *  - cod      Cash on delivery. If the store sets a deposit, the customer first transfers it (wallet or InstaPay)
- *             and the deposit is deducted from what the courier collects.
+ *  - cod      Cash on delivery. Plain cash by default. If the store switches the deposit ON (Admin → Settings →
+ *             Payments), the customer first transfers it (wallet or InstaPay) and it is deducted from what the
+ *             courier collects.
  *  - wallet   Mobile-wallet transfer (Vodafone Cash, Orange Cash…) of the full amount.
  *  - instapay InstaPay transfer of the full amount.
  *
@@ -20,13 +21,22 @@ export type PaymentSettings = {
   walletAccounts: string[];
   /** InstaPay addresses/numbers customers can pay to. */
   instapayAccounts: string[];
-  /** Deposit required up-front for cash-on-delivery orders. 0 turns the deposit off. */
+  /**
+   * Master switch for the cash-on-delivery deposit. OFF = plain cash on delivery with no deposit at all.
+   * Optional so settings saved before the switch existed keep working: when it was never saved, the deposit is
+   * considered on only if an amount had been set.
+   */
+  depositEnabled?: boolean;
+  /** Deposit amount (piastres) asked up-front when the deposit switch is on. Kept even while the switch is off. */
   depositMinor: number;
 };
 
 export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = { walletAccounts: [], instapayAccounts: [], depositMinor: 0 };
 
 export const MAX_ACCOUNTS_PER_CHANNEL = 10;
+
+/** Is the cash-on-delivery deposit switched on? Legacy settings (no switch saved) are on when an amount is set. */
+export const isDepositEnabled = (s: PaymentSettings) => (s.depositEnabled ?? s.depositMinor > 0) && s.depositMinor > 0;
 
 export const channelAccounts = (s: PaymentSettings, channel: TransferChannel) => (channel === "wallet" ? s.walletAccounts : s.instapayAccounts);
 export const enabledChannels = (s: PaymentSettings): TransferChannel[] => (["wallet", "instapay"] as const).filter((c) => channelAccounts(s, c).length > 0);
@@ -49,8 +59,8 @@ export type PaymentPlan = {
 export function paymentPlan(method: string, totalMinor: number, s: PaymentSettings): PaymentPlan {
   const channels = enabledChannels(s);
   if (method === "cod") {
-    // A deposit only makes sense when there is somewhere to send it.
-    const deposit = channels.length ? Math.min(Math.max(0, s.depositMinor), totalMinor) : 0;
+    // No deposit unless the store switched it on, and only when there is somewhere to send it.
+    const deposit = isDepositEnabled(s) && channels.length ? Math.min(Math.max(0, s.depositMinor), totalMinor) : 0;
     return { prepaidMinor: deposit, dueMinor: totalMinor - deposit, needsTransfer: deposit > 0, channels: deposit > 0 ? channels : [] };
   }
   if ((method === "wallet" || method === "instapay") && channelAccounts(s, method).length > 0) {

@@ -173,13 +173,14 @@ const accountLines = (key: "walletAccounts" | "instapayAccounts") =>
     });
 
 export const paymentSettingsSchema = z
-  .object({ walletAccounts: accountLines("walletAccounts"), instapayAccounts: accountLines("instapayAccounts"), deposit: z.string().trim() })
+  .object({ walletAccounts: accountLines("walletAccounts"), instapayAccounts: accountLines("instapayAccounts"), deposit: z.string().trim(), depositEnabled: z.boolean() })
   .transform((s, ctx) => {
-    // Blank or 0 turns the deposit off. Entered in EGP, stored in piastres.
+    // The switch decides whether a deposit is asked at all. The amount is entered in EGP, stored in piastres,
+    // and kept even while the switch is off so it can be turned back on without retyping.
     const raw = s.deposit.replace(/[^\d.]/g, "");
     const n = raw === "" ? 0 : Number(raw);
-    if (!Number.isFinite(n) || n < 0 || n > 100_000) ctx.addIssue({ code: "custom", path: ["deposit"], message: "money" });
-    return { walletAccounts: s.walletAccounts, instapayAccounts: s.instapayAccounts, depositMinor: Math.round((Number.isFinite(n) ? n : 0) * 100) };
+    if (!Number.isFinite(n) || n < 0 || n > 100_000 || (s.depositEnabled && n <= 0)) ctx.addIssue({ code: "custom", path: ["deposit"], message: "money" });
+    return { walletAccounts: s.walletAccounts, instapayAccounts: s.instapayAccounts, depositEnabled: s.depositEnabled, depositMinor: Math.round((Number.isFinite(n) ? n : 0) * 100) };
   });
 
 export const lowStockSchema = z.object({

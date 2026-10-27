@@ -1364,8 +1364,11 @@
         "walletHint": "One per line, e.g. 01012345678 — Vodafone Cash. Shown to the customer exactly as written.",
         "instapay": "InstaPay accounts",
         "instapayHint": "One per line — an InstaPay address or the number linked to it.",
-        "deposit": "Cash-on-delivery deposit (EGP)",
-        "depositHint": "Customers who choose cash on delivery transfer this amount first and upload the receipt; it is deducted from what the courier collects. Leave empty or 0 for no deposit. A deposit needs at least one wallet or InstaPay account."
+        "depositEnabled": "Require a deposit for cash on delivery",
+        "depositOnNote": "Deposit is ON: customers who choose cash on delivery transfer the deposit first and upload the receipt.",
+        "depositOffNote": "Deposit is OFF: cash on delivery is paid fully in cash to the courier, with no deposit or receipt.",
+        "deposit": "Deposit amount (EGP)",
+        "depositHint": "Deducted from what the courier collects. The amount is remembered even while the deposit is off, so you can turn it back on without retyping. A deposit needs at least one wallet or InstaPay account."
       }
     },
     "theme": {
