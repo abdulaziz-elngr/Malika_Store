@@ -8,7 +8,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Link, usePathname } from "@/i18n/navigation";
 import { CartLineItem } from "./cart-line";
 import { useCart } from "./cart-provider";
-import { CheckoutButton, CouponBox, FreeShippingBar, Totals } from "./cart-summary";
+import { CheckoutButton, CouponBox, Totals } from "./cart-summary";
 
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])';
 
@@ -85,7 +85,6 @@ export function CartDrawer() {
                   {pricingFailed && <p role="alert" className="py-4 text-sm text-brand">{t("pricingFailed")}</p>}
                 </div>
                 <footer className="shrink-0 space-y-5 border-t border-line bg-surface px-6 py-6">
-                  <FreeShippingBar />
                   <CouponBox />
                   <Totals />
                   {blocked && <p role="alert" className="text-sm text-brand">{t("fixIssues")}</p>}

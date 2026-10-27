@@ -101,9 +101,10 @@ export const orders = pgTable(
     // Human order number is MLK-<seq>; the identity column keeps it unique and gap-tolerant under concurrency.
     seq: integer("seq").notNull().generatedAlwaysAsIdentity({ startWith: 10291 }),
     customerId: uuid("customer_id").references(() => customers.id, { onDelete: "set null" }),
-    email: text("email").notNull(),
+    email: text("email"), // optional at checkout
     name: text("name").notNull(),
     phone: text("phone").notNull(),
+    phone2: text("phone2"), // second contact number (required at checkout since 0009; null on older orders)
     governorate: text("governorate").notNull(),
     city: text("city").notNull(),
     line1: text("line1").notNull(),
@@ -115,7 +116,7 @@ export const orders = pgTable(
     paymentStatus: paymentStatusEnum("payment_status").notNull().default("pending"),
     paymentReference: text("payment_reference"),
     // Manual transfers (wallet / InstaPay): what was paid up-front, through which channel, from which number, and the receipt image.
-    // prepaid_minor is the full total for wallet/InstaPay orders, or the deposit for cash-on-delivery; the courier collects total − prepaid.
+    // prepaid_minor is the full total for wallet/InstaPay orders (older cash-on-delivery orders may carry a deposit); the courier collects total − prepaid.
     prepaidMinor: integer("prepaid_minor").notNull().default(0),
     transferChannel: text("transfer_channel"),
     senderPhone: text("sender_phone"),
@@ -182,7 +183,7 @@ export const couponUsages = pgTable(
     couponId: uuid("coupon_id").notNull().references(() => coupons.id, { onDelete: "cascade" }),
     orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
     customerId: uuid("customer_id").references(() => customers.id, { onDelete: "set null" }),
-    email: text("email").notNull(),
+    email: text("email"),
     discountMinor: integer("discount_minor").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

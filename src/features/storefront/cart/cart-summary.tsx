@@ -9,22 +9,6 @@ import { inputClass } from "@/components/ui/field";
 import { formatMoney, type Loc } from "@/lib/localize";
 import { useCart } from "./cart-provider";
 
-export function FreeShippingBar() {
-  const t = useTranslations("cart");
-  const loc = useLocale() as Loc;
-  const { pricing } = useCart();
-  if (!pricing || pricing.subtotalMinor === 0) return null;
-  const remaining = pricing.freeShippingRemainingMinor;
-  const threshold = pricing.freeShippingThresholdMinor || 1;
-  const pct = Math.min(100, Math.round(((threshold - remaining) / threshold) * 100));
-  return (
-    <div className="space-y-2">
-      <p className="text-sm">{remaining > 0 ? t("freeShippingAway", { amount: formatMoney(remaining, loc) }) : t("freeShippingReached")}</p>
-      <div className="h-px w-full bg-line" role="presentation"><div className="h-px bg-accent transition-[width] duration-700 ease-luxe" style={{ width: `${pct}%` }} /></div>
-    </div>
-  );
-}
-
 export function CouponBox() {
   const t = useTranslations("cart");
   const loc = useLocale() as Loc;

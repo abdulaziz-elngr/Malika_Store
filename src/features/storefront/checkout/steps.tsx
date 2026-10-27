@@ -8,81 +8,92 @@ import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
 import { GOVERNORATES, governorateName } from "@/lib/geo";
 import { formatMoney, type Loc } from "@/lib/localize";
-import { channelAccounts, paymentPlan, type PaymentPlan, type TransferChannel } from "@/lib/payments";
-import { DELIVERY_METHODS } from "@/lib/shipping";
+import { channelAccounts, type PaymentPlan, type TransferChannel } from "@/lib/payments";
 import type { FieldErrors } from "@/lib/validation/checkout";
 import type { CheckoutForm, PaymentMethodOption, PaymentSettings, SavedAddress } from "./types";
 
 type StepProps = { form: CheckoutForm; errors: FieldErrors; set: <K extends keyof CheckoutForm>(k: K, v: CheckoutForm[K]) => void };
 
-export function InfoStep({ form, errors, set, signedIn }: StepProps & { signedIn: boolean }) {
-  const t = useTranslations("checkout");
-  return (
-    <div className="grid gap-6 sm:grid-cols-2">
-      <Field label={t("name")} error={errors.name} className="sm:col-span-2">
-        {(p) => <input {...p} name="name" autoComplete="name" value={form.name} onChange={(e) => set("name", e.target.value)} className={inputClass} />}
-      </Field>
-      <Field label={t("email")} error={errors.email}>
-        {(p) => <input {...p} name="email" type="email" inputMode="email" dir="ltr" autoComplete="email" value={form.email} onChange={(e) => set("email", e.target.value)} className={cn(inputClass, "text-start")} />}
-      </Field>
-      <Field label={t("phone")} error={errors.phone} hint={t("phoneHint")}>
-        {(p) => <input {...p} name="tel" type="tel" inputMode="tel" dir="ltr" autoComplete="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="01XXXXXXXXX" className={cn(inputClass, "text-start")} />}
-      </Field>
-      {!signedIn && (
-        <p className="text-sm text-muted sm:col-span-2">
-          {t("haveAccount")} <Link href="/account/login?next=/checkout" className="text-brand underline underline-offset-4">{t("signIn")}</Link>
-        </p>
-      )}
-    </div>
-  );
-}
-
-export function AddressStep({ form, errors, set, saved, onPick, signedIn }: StepProps & { saved: SavedAddress[]; onPick: (a: SavedAddress) => void; signedIn: boolean }) {
+/** The whole checkout on one page: contact, address and payment. */
+export function DetailsStep({ form, errors, set, saved, onPick, signedIn, methods, settings, plan, shippingMinor }: StepProps & { saved: SavedAddress[]; onPick: (a: SavedAddress) => void; signedIn: boolean; methods: PaymentMethodOption[]; settings: PaymentSettings; plan: PaymentPlan; shippingMinor: number }) {
   const t = useTranslations("checkout");
   const loc = useLocale() as Loc;
   return (
-    <div className="space-y-8">
-      {saved.length > 0 && (
-        <fieldset>
-          <legend className="mb-3 text-[0.72rem] font-medium uppercase tracking-[0.2em] text-accent">{t("savedAddresses")}</legend>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {saved.map((a) => (
-              <button key={a.id} type="button" onClick={() => onPick(a)} className="border border-line p-4 text-start text-sm transition-colors hover:border-brand focus-visible:border-brand">
-                <span className="block font-medium">{a.label || a.recipient}{a.isDefault && <span className="ms-2 text-xs text-accent">· {t("default")}</span>}</span>
-                <span className="mt-1 block text-muted">{a.line1}، {a.city}، {governorateName(a.governorate, loc)}</span>
-              </button>
-            ))}
-          </div>
-        </fieldset>
-      )}
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Field label={t("governorate")} error={errors.governorate}>
-          {(p) => (
-            <select {...p} name="governorate" autoComplete="address-level1" value={form.governorate} onChange={(e) => set("governorate", e.target.value)} className={inputClass}>
-              <option value="">{t("select")}</option>
-              {GOVERNORATES.map((g) => <option key={g[0]} value={g[0]}>{loc === "ar" ? g[1] : g[2]}</option>)}
-            </select>
-          )}
-        </Field>
-        <Field label={t("city")} error={errors.city}>
-          {(p) => <input {...p} name="city" autoComplete="address-level2" value={form.city} onChange={(e) => set("city", e.target.value)} className={inputClass} />}
-        </Field>
-        <Field label={t("line1")} error={errors.line1} className="sm:col-span-2">
-          {(p) => <input {...p} name="line1" autoComplete="address-line1" value={form.line1} onChange={(e) => set("line1", e.target.value)} placeholder={t("line1Placeholder")} className={inputClass} />}
-        </Field>
-        <Field label={t("line2")} error={errors.line2} className="sm:col-span-2">
-          {(p) => <input {...p} name="line2" autoComplete="address-line2" value={form.line2} onChange={(e) => set("line2", e.target.value)} className={inputClass} />}
-        </Field>
-        <Field label={t("notes")} error={errors.notes} className="sm:col-span-2">
-          {(p) => <textarea {...p} name="notes" rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder={t("notesPlaceholder")} className={cn(inputClass, "h-auto py-3")} />}
-        </Field>
-        {signedIn && (
-          <label className="flex items-center gap-3 text-sm sm:col-span-2">
-            <input type="checkbox" checked={form.saveAddress} onChange={(e) => set("saveAddress", e.target.checked)} className="size-4 accent-[var(--brand)]" />
-            {t("saveAddress")}
-          </label>
+    <div className="space-y-12">
+      <section aria-labelledby="sec-info" className="space-y-6">
+        <h2 id="sec-info" className="text-[0.72rem] font-medium uppercase tracking-[0.2em] text-accent">{t("steps.info")}</h2>
+        {!signedIn && (
+          <p className="text-sm text-muted">
+            {t("haveAccount")} <Link href="/account/login?next=/checkout" className="text-brand underline underline-offset-4">{t("signIn")}</Link>
+          </p>
         )}
-      </div>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field label={t("name")} error={errors.name} className="sm:col-span-2">
+            {(p) => <input {...p} name="name" autoComplete="name" value={form.name} onChange={(e) => set("name", e.target.value)} className={inputClass} />}
+          </Field>
+          <Field label={t("phone")} error={errors.phone} hint={t("phoneHint")}>
+            {(p) => <input {...p} name="tel" type="tel" inputMode="tel" dir="ltr" autoComplete="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="01XXXXXXXXX" className={cn(inputClass, "text-start")} />}
+          </Field>
+          <Field label={t("phone2")} error={errors.phone2} hint={t("phone2Hint")}>
+            {(p) => <input {...p} name="tel2" type="tel" inputMode="tel" dir="ltr" autoComplete="off" value={form.phone2} onChange={(e) => set("phone2", e.target.value)} placeholder="01XXXXXXXXX" className={cn(inputClass, "text-start")} />}
+          </Field>
+          <Field label={t("emailOptional")} error={errors.email} className="sm:col-span-2">
+            {(p) => <input {...p} name="email" type="email" inputMode="email" dir="ltr" autoComplete="email" value={form.email} onChange={(e) => set("email", e.target.value)} className={cn(inputClass, "text-start")} />}
+          </Field>
+        </div>
+      </section>
+
+      <section aria-labelledby="sec-address" className="space-y-6">
+        <h2 id="sec-address" className="text-[0.72rem] font-medium uppercase tracking-[0.2em] text-accent">{t("steps.address")}</h2>
+        {saved.length > 0 && (
+          <fieldset>
+            <legend className="mb-3 text-sm text-muted">{t("savedAddresses")}</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {saved.map((a) => (
+                <button key={a.id} type="button" onClick={() => onPick(a)} className="border border-line p-4 text-start text-sm transition-colors hover:border-brand focus-visible:border-brand">
+                  <span className="block font-medium">{a.label || a.recipient}{a.isDefault && <span className="ms-2 text-xs text-accent">· {t("default")}</span>}</span>
+                  <span className="mt-1 block text-muted">{a.line1}، {a.city}، {governorateName(a.governorate, loc)}</span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        )}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field label={t("governorate")} error={errors.governorate}>
+            {(p) => (
+              <select {...p} name="governorate" autoComplete="address-level1" value={form.governorate} onChange={(e) => set("governorate", e.target.value)} className={inputClass}>
+                <option value="">{t("select")}</option>
+                {GOVERNORATES.map((g) => <option key={g[0]} value={g[0]}>{loc === "ar" ? g[1] : g[2]}</option>)}
+              </select>
+            )}
+          </Field>
+          <Field label={t("city")} error={errors.city}>
+            {(p) => <input {...p} name="city" autoComplete="address-level2" value={form.city} onChange={(e) => set("city", e.target.value)} className={inputClass} />}
+          </Field>
+          <Field label={t("line1")} error={errors.line1} className="sm:col-span-2">
+            {(p) => <textarea {...p} name="line1" rows={2} autoComplete="street-address" value={form.line1} onChange={(e) => set("line1", e.target.value)} placeholder={t("line1Placeholder")} className={cn(inputClass, "h-auto py-3")} />}
+          </Field>
+          {signedIn && (
+            <label className="flex items-center gap-3 text-sm sm:col-span-2">
+              <input type="checkbox" checked={form.saveAddress} onChange={(e) => set("saveAddress", e.target.checked)} className="size-4 accent-[var(--brand)]" />
+              {t("saveAddress")}
+            </label>
+          )}
+        </div>
+        <p className="text-sm text-muted">{t("shippingFlat", { amount: formatMoney(shippingMinor, loc) })}</p>
+      </section>
+
+      <section aria-labelledby="sec-payment" className="space-y-6">
+        <h2 id="sec-payment" className="text-[0.72rem] font-medium uppercase tracking-[0.2em] text-accent">{t("steps.payment")}</h2>
+        <fieldset className="space-y-3">
+          <legend className="sr-only">{t("steps.payment")}</legend>
+          {methods.map((m) => (
+            <Choice key={m.id} name="payment" checked={form.paymentMethod === m.id} disabled={!m.enabled} onSelect={() => set("paymentMethod", m.id)} title={t(`payment.${m.id}` as never)} body={t(`payment.${m.id}Body` as never)} />
+          ))}
+        </fieldset>
+        {errors.paymentMethod && <p role="alert" className="text-sm text-brand">{t("choosePayment")}</p>}
+        {plan.needsTransfer && <TransferPanel form={form} set={set} errors={errors} settings={settings} plan={plan} />}
+      </section>
     </div>
   );
 }
@@ -98,46 +109,6 @@ function Choice({ checked, disabled, onSelect, title, body, aside, name }: { che
       </span>
       {aside && <span className="text-sm">{aside}</span>}
     </label>
-  );
-}
-
-export function DeliveryStep({ form, set, options, freeThresholdMinor, window }: { form: CheckoutForm; set: StepProps["set"]; options: Record<string, number> | null; freeThresholdMinor: number; window: { minDays: number; maxDays: number } }) {
-  const t = useTranslations("checkout");
-  const loc = useLocale() as Loc;
-  return (
-    <fieldset className="space-y-3">
-      <legend className="sr-only">{t("steps.delivery")}</legend>
-      {DELIVERY_METHODS.map((m) => (
-        <Choice key={m.id} name="delivery" checked={form.deliveryMethod === m.id} onSelect={() => set("deliveryMethod", m.id)} title={t(`delivery.${m.id}`)} body={t("deliveryEta", { min: window.minDays, max: window.maxDays })}
-          aside={(options?.[m.id] ?? m.priceMinor) === 0 ? t("free") : formatMoney(options?.[m.id] ?? m.priceMinor, loc)} />
-      ))}
-      <p className="pt-2 text-sm text-muted">{t("freeShippingNote", { amount: formatMoney(freeThresholdMinor, loc) })}</p>
-    </fieldset>
-  );
-}
-
-export function PaymentStep({ form, set, errors, methods, settings, plan, totalMinor }: { form: CheckoutForm; set: StepProps["set"]; errors: FieldErrors; methods: PaymentMethodOption[]; settings: PaymentSettings; plan: PaymentPlan; totalMinor: number }) {
-  const t = useTranslations("checkout");
-  const loc = useLocale() as Loc;
-  // Cash on delivery explains the deposit when the store asks for one.
-  const codPlan = paymentPlan("cod", totalMinor, settings);
-  const bodyFor = (id: string) => {
-    if (id === "cod") {
-      const p = codPlan;
-      return p.prepaidMinor > 0 ? t("payment.codDepositBody", { deposit: formatMoney(p.prepaidMinor, loc), due: formatMoney(p.dueMinor, loc) }) : t("payment.codBody");
-    }
-    return t(`payment.${id}Body` as never);
-  };
-  return (
-    <div className="space-y-8">
-      <fieldset className="space-y-3">
-        <legend className="sr-only">{t("steps.payment")}</legend>
-        {methods.map((m) => (
-          <Choice key={m.id} name="payment" checked={form.paymentMethod === m.id} disabled={!m.enabled} onSelect={() => set("paymentMethod", m.id)} title={t(`payment.${m.id}` as never)} body={bodyFor(m.id)} />
-        ))}
-      </fieldset>
-      {plan.needsTransfer && <TransferPanel form={form} set={set} errors={errors} settings={settings} plan={plan} />}
-    </div>
   );
 }
 
@@ -172,14 +143,13 @@ function TransferPanel({ form, set, errors, settings, plan }: { form: CheckoutFo
   const loc = useLocale() as Loc;
   const channel = form.transferChannel || null;
   const accounts = channel ? channelAccounts(settings, channel) : [];
-  const isDeposit = form.paymentMethod === "cod";
 
   return (
     <section aria-labelledby="transfer-title" className="space-y-6 border border-line bg-surface p-5 sm:p-6">
       <div className="space-y-1">
         <h2 id="transfer-title" className="text-[0.72rem] font-medium uppercase tracking-[0.2em] text-accent">{t("transfer.title")}</h2>
         <p className="font-display text-3xl text-brand">{formatMoney(plan.prepaidMinor, loc)}</p>
-        <p className="text-sm text-muted">{isDeposit ? t("transfer.depositNote", { due: formatMoney(plan.dueMinor, loc) }) : t("transfer.fullNote")}</p>
+        <p className="text-sm text-muted">{t("transfer.fullNote")}</p>
       </div>
 
       {plan.channels.length > 1 && (
@@ -274,29 +244,27 @@ function ReceiptUpload({ form, set, error }: { form: CheckoutForm; set: StepProp
   );
 }
 
-export function ReviewStep({ form, plan, onEdit }: { form: CheckoutForm; plan: PaymentPlan; onEdit: (step: "info" | "address" | "delivery" | "payment") => void }) {
+export function ReviewStep({ form, plan, onEdit }: { form: CheckoutForm; plan: PaymentPlan; onEdit: () => void }) {
   const t = useTranslations("checkout");
   const loc = useLocale() as Loc;
-  const block = (title: string, step: "info" | "address" | "delivery" | "payment", lines: string[]) => (
+  const block = (title: string, lines: string[]) => (
     <div className="flex items-start justify-between gap-4 border-b border-line py-5">
       <div className="space-y-1 text-sm">
         <h3 className="text-[0.72rem] font-medium uppercase tracking-[0.2em] text-accent">{title}</h3>
         {lines.filter(Boolean).map((l, i) => <p key={i} className={i === 0 ? "text-foreground" : "text-muted"}>{l}</p>)}
       </div>
-      <button type="button" onClick={() => onEdit(step)} className="shrink-0 text-xs uppercase tracking-[0.15em] text-brand underline underline-offset-4">{t("edit")}</button>
+      <button type="button" onClick={onEdit} className="shrink-0 text-xs uppercase tracking-[0.15em] text-brand underline underline-offset-4">{t("edit")}</button>
     </div>
   );
   return (
     <div className="border-t border-line">
-      {block(t("steps.info"), "info", [form.name, form.email, form.phone])}
-      {block(t("steps.address"), "address", [form.line1, [form.line2, form.city, governorateName(form.governorate, loc)].filter(Boolean).join("، "), form.notes])}
-      {block(t("steps.delivery"), "delivery", [t(`delivery.${form.deliveryMethod}`)])}
-      {block(t("steps.payment"), "payment", [
+      {block(t("steps.info"), [form.name, [form.phone, form.phone2].filter(Boolean).join(" · "), form.email])}
+      {block(t("steps.address"), [form.line1, [form.city, governorateName(form.governorate, loc)].filter(Boolean).join("، ")])}
+      {block(t("steps.payment"), [
         t(`payment.${form.paymentMethod}` as never),
         ...(plan.needsTransfer
           ? [t("transfer.reviewPaidNow", { amount: formatMoney(plan.prepaidMinor, loc), channel: form.transferChannel ? t(CHANNEL_LABEL[form.transferChannel]) : "" }), t("transfer.reviewFrom", { phone: form.senderPhone })]
           : []),
-        ...(plan.needsTransfer && plan.dueMinor > 0 ? [t("transfer.reviewDue", { amount: formatMoney(plan.dueMinor, loc) })] : []),
       ])}
       <p className="pt-5 text-sm text-muted">
         {t.rich("termsNote", { terms: (c) => <Link href="/terms" className="text-brand underline underline-offset-4">{c}</Link>, privacy: (c) => <Link href="/privacy" className="text-brand underline underline-offset-4">{c}</Link> })}

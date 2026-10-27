@@ -11,7 +11,6 @@ import type { ActionState } from "@/server/actions/types";
 /** All amounts are plain EGP strings — the schema converts to piastres itself. */
 export type ShippingDefaults = {
   standard: string;
-  freeThreshold: string;
   standardMinDays: string;
   standardMaxDays: string;
 };
@@ -27,14 +26,9 @@ export function ShippingCard({ defaults, readOnly }: { defaults: ShippingDefault
       <form action={formAction} className="space-y-5 p-5" noValidate aria-busy={pending}>
         <FormError error={state.errors?.form} />
 
-        <div className="grid items-start gap-5 sm:grid-cols-2">
-          <Field label={t("standardFee")} error={state.errors?.standardMinor}>
-            {(p) => <input {...p} name="standard" dir="ltr" inputMode="decimal" defaultValue={defaults.standard} placeholder="60" disabled={readOnly} required className={inputClass} />}
-          </Field>
-          <Field label={t("freeThreshold")} hint={t("freeThresholdHint")} error={state.errors?.freeThresholdMinor}>
-            {(p) => <input {...p} name="freeThreshold" dir="ltr" inputMode="decimal" defaultValue={defaults.freeThreshold} placeholder="3000" disabled={readOnly} required className={inputClass} />}
-          </Field>
-        </div>
+        <Field label={t("standardFee")} hint={t("standardFeeHint")} error={state.errors?.standardMinor} className="max-w-sm">
+          {(p) => <input {...p} name="standard" dir="ltr" inputMode="decimal" defaultValue={defaults.standard} placeholder="110" disabled={readOnly} required className={inputClass} />}
+        </Field>
 
         <div className="grid items-start gap-5 sm:grid-cols-2">
           <Field label={t("standardMinDays")} error={state.errors?.standardMinDays}>

@@ -127,7 +127,6 @@ export const seoFormSchema = z.object({
 export const shippingSettingsSchema = z
   .object({
     standardMinor: z.string().trim(),
-    freeThresholdMinor: z.string().trim(),
     standardMinDays: z.string().trim(),
     standardMaxDays: z.string().trim(),
   })
@@ -136,11 +135,9 @@ export const shippingSettingsSchema = z
       const n = Number(v);
       return Number.isFinite(n) && n >= 0 && n <= max ? Math.round(n) : NaN;
     };
-    // Prices/threshold are entered in EGP and stored in piastres.
-    const price = { standardMinor: num(s.standardMinor.replace(/[^\d.]/g, ""), 100_000), freeThresholdMinor: num(s.freeThresholdMinor.replace(/[^\d.]/g, ""), 1_000_000) };
-    for (const [k, v] of Object.entries(price)) {
-      if (Number.isNaN(v) || v <= 0) ctx.addIssue({ code: "custom", path: [k], message: k === "freeThresholdMinor" ? "number" : "money" });
-    }
+    // The fee is entered in EGP and stored in piastres.
+    const fee = num(s.standardMinor.replace(/[^\d.]/g, ""), 100_000);
+    if (Number.isNaN(fee) || fee <= 0) ctx.addIssue({ code: "custom", path: ["standardMinor"], message: "money" });
     const days = { standardMinDays: num(s.standardMinDays, 60), standardMaxDays: num(s.standardMaxDays, 60) };
     for (const [k, v] of Object.entries(days)) {
       if (Number.isNaN(v) || v < 0) ctx.addIssue({ code: "custom", path: [k], message: "number" });
@@ -151,7 +148,6 @@ export const shippingSettingsSchema = z
     const egp = (v: string) => Math.round(Number(v.replace(/[^\d.]/g, "")) * 100);
     return {
       standardMinor: egp(s.standardMinor),
-      freeThresholdMinor: egp(s.freeThresholdMinor),
       standardMinDays: Number(s.standardMinDays),
       standardMaxDays: Number(s.standardMaxDays),
     };
@@ -173,14 +169,7 @@ const accountLines = (key: "walletAccounts" | "instapayAccounts") =>
     });
 
 export const paymentSettingsSchema = z
-  .object({ walletAccounts: accountLines("walletAccounts"), instapayAccounts: accountLines("instapayAccounts"), deposit: z.string().trim() })
-  .transform((s, ctx) => {
-    // Blank or 0 turns the deposit off. Entered in EGP, stored in piastres.
-    const raw = s.deposit.replace(/[^\d.]/g, "");
-    const n = raw === "" ? 0 : Number(raw);
-    if (!Number.isFinite(n) || n < 0 || n > 100_000) ctx.addIssue({ code: "custom", path: ["deposit"], message: "money" });
-    return { walletAccounts: s.walletAccounts, instapayAccounts: s.instapayAccounts, depositMinor: Math.round((Number.isFinite(n) ? n : 0) * 100) };
-  });
+  .object({ walletAccounts: accountLines("walletAccounts"), instapayAccounts: accountLines("instapayAccounts") });
 
 export const lowStockSchema = z.object({
   threshold: z.string().trim().transform((v, ctx) => {

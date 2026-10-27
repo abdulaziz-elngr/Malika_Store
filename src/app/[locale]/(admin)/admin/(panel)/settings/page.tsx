@@ -28,14 +28,13 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
       <ShippingCard
         defaults={{
           standard: egp(shipping.standardMinor),
-          freeThreshold: egp(shipping.freeThresholdMinor),
           standardMinDays: String(shipping.standardMinDays),
           standardMaxDays: String(shipping.standardMaxDays),
         }}
         readOnly={readOnly}
       />
       <PaymentsCard
-        defaults={{ walletAccounts: payments.walletAccounts.join("\n"), instapayAccounts: payments.instapayAccounts.join("\n"), deposit: payments.depositMinor > 0 ? egp(payments.depositMinor) : "" }}
+        defaults={{ walletAccounts: payments.walletAccounts.join("\n"), instapayAccounts: payments.instapayAccounts.join("\n") }}
         readOnly={readOnly}
       />
       <OrderAlertsCard emails={alerts.emails} enabled={alerts.enabled} mailReady={isMailConfigured()} readOnly={readOnly} />

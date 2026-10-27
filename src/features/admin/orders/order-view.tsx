@@ -28,12 +28,19 @@ export async function OrderView({ order }: { order: OrderAdmin }) {
           <div className="space-y-4 p-5 text-sm">
             <div className="space-y-1">
               <p className="text-base font-medium">{order.name}</p>
-              <p dir="ltr" className="text-start break-all text-muted">
-                {order.email}
-              </p>
+              {order.email ? (
+                <p dir="ltr" className="text-start break-all text-muted">
+                  {order.email}
+                </p>
+              ) : null}
               <p dir="ltr" className="text-start text-muted">
                 {order.phone}
               </p>
+              {order.phone2 ? (
+                <p dir="ltr" className="text-start text-muted">
+                  {order.phone2}
+                </p>
+              ) : null}
             </div>
             <div className="space-y-1">
               <p className="text-[0.72rem] uppercase tracking-[0.18em] text-accent">{t("address")}</p>

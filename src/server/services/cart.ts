@@ -88,7 +88,7 @@ export async function priceCart(input: PriceInput, ex: Executor = db): Promise<C
   let shippingMinor: number | null = null;
   let shippingOptions: Record<string, number> | null = null;
   if (buyable.length) {
-    shippingOptions = Object.fromEntries(DELIVERY_METHODS.map((m) => [m.id, shippingCost(m.id, afterDiscount, ship)]));
+    shippingOptions = Object.fromEntries(DELIVERY_METHODS.map((m) => [m.id, shippingCost(m.id, ship)]));
     if (input.deliveryMethod) shippingMinor = shippingOptions[input.deliveryMethod] ?? null;
   }
 
@@ -96,8 +96,6 @@ export async function priceCart(input: PriceInput, ex: Executor = db): Promise<C
     lines, missing, subtotalMinor, discountMinor, shippingMinor, shippingOptions,
     totalMinor: afterDiscount + (shippingMinor ?? 0),
     coupon, couponId,
-    freeShippingRemainingMinor: Math.max(0, ship.freeThresholdMinor - afterDiscount),
-    freeShippingThresholdMinor: ship.freeThresholdMinor,
     deliveryWindow: { minDays: ship.standardMinDays, maxDays: ship.standardMaxDays },
     hasIssues: lines.some((l) => l.issue === "out_of_stock") || missing.length > 0,
   };

@@ -8,7 +8,7 @@ import { Container } from "@/components/ui/container";
 import { Link } from "@/i18n/navigation";
 import { CartLineItem } from "./cart-line";
 import { useCart } from "./cart-provider";
-import { CheckoutButton, CouponBox, FreeShippingBar, Totals } from "./cart-summary";
+import { CheckoutButton, CouponBox, Totals } from "./cart-summary";
 
 export function CartView() {
   const t = useTranslations("cart");
@@ -36,7 +36,6 @@ export function CartView() {
           </section>
           <aside aria-label={t("summary")} className="h-fit space-y-6 border border-line bg-surface p-6 lg:sticky lg:top-28">
             <h2 className="text-xs font-medium uppercase tracking-[0.25em] text-accent">{t("summary")}</h2>
-            <FreeShippingBar />
             <CouponBox />
             <Totals />
             {blocked && <p role="alert" className="text-sm text-brand">{t("fixIssues")}</p>}

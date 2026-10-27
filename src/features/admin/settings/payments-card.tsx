@@ -8,8 +8,8 @@ import { Field, FormError, inputClass } from "@/components/ui/field";
 import { savePaymentsAction } from "@/server/actions/admin-system";
 import type { ActionState } from "@/server/actions/types";
 
-/** Accounts are one per line; the deposit is a plain EGP string ("" or 0 = no deposit). */
-export type PaymentsDefaults = { walletAccounts: string; instapayAccounts: string; deposit: string };
+/** Accounts are one per line. */
+export type PaymentsDefaults = { walletAccounts: string; instapayAccounts: string };
 
 export function PaymentsCard({ defaults, readOnly }: { defaults: PaymentsDefaults; readOnly: boolean }) {
   const t = useTranslations("admin.settings.payments");
@@ -31,10 +31,6 @@ export function PaymentsCard({ defaults, readOnly }: { defaults: PaymentsDefault
             {(p) => <textarea {...p} name="instapayAccounts" dir="ltr" rows={4} defaultValue={defaults.instapayAccounts} placeholder={"malika@instapay"} disabled={readOnly} className={`${inputClass} h-auto py-3 text-start`} />}
           </Field>
         </div>
-
-        <Field label={t("deposit")} hint={t("depositHint")} error={state.errors?.deposit} className="max-w-sm">
-          {(p) => <input {...p} name="deposit" dir="ltr" inputMode="decimal" defaultValue={defaults.deposit} placeholder="0" disabled={readOnly} className={inputClass} />}
-        </Field>
 
         <p role="status" aria-live="polite" className="text-sm text-sage-700 dark:text-sage-200">
           {state.ok ? f("saved") : ""}

@@ -64,6 +64,13 @@
       "when": 1791880000000,
       "tag": "0008_review_per_customer",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791960000000,
+      "tag": "0009_quick_checkout",
+      "breakpoints": true
     }
   ]
 }

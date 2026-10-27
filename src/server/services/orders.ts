@@ -40,7 +40,7 @@ export async function placeOrder(input: z.output<typeof checkoutSchema>, custome
     return await db.transaction(async (tx) => {
       // 1. Re-price everything from the database: the client's numbers are never trusted.
       const priced = await priceCart(
-        { items: input.items, coupon: input.coupon, deliveryMethod: input.deliveryMethod, phone: input.phone, customerId: customer?.id, email: input.email },
+        { items: input.items, coupon: input.coupon, deliveryMethod: input.deliveryMethod, phone: input.phone, customerId: customer?.id, email: input.email || customer?.email },
         tx,
       );
       const buyable = priced.lines.filter((l) => l.quantity > 0);
@@ -50,7 +50,7 @@ export async function placeOrder(input: z.output<typeof checkoutSchema>, custome
       if (priced.hasIssues || priced.lines.some((l) => l.issue)) throw new Abort("stock");
       if (input.coupon && !priced.coupon?.ok) throw new Abort("coupon");
 
-      // 1b. Payment: the deposit / prepaid amount is derived from the server-side total, never from the browser.
+      // 1b. Payment: the prepaid amount is derived from the server-side total, never from the browser.
       // When a transfer is required, the receipt and the number it was sent from must come with the order.
       const plan = paymentPlan(provider.id, priced.totalMinor, paymentSettings);
       let transfer: { channel: string; senderPhone: string; proofUrl: string } | null = null;
@@ -91,7 +91,7 @@ export async function placeOrder(input: z.output<typeof checkoutSchema>, custome
         .insert(orders)
         .values({
           customerId: customer?.id ?? null,
-          email: input.email, name: input.name, phone: input.phone,
+          email: input.email || customer?.email || null, name: input.name, phone: input.phone, phone2: input.phone2,
           governorate: input.governorate, city: input.city, line1: input.line1, line2: input.line2 || null, notes: input.notes || null,
           deliveryMethod: input.deliveryMethod, paymentMethod: provider.id,
           prepaidMinor: plan.prepaidMinor, transferChannel: transfer?.channel ?? null, senderPhone: transfer?.senderPhone ?? null, paymentProofUrl: transfer?.proofUrl ?? null,
@@ -113,10 +113,10 @@ export async function placeOrder(input: z.output<typeof checkoutSchema>, custome
       );
       await tx.insert(orderEvents).values({ orderId: order.id, status: "pending", note: "Order placed" });
       await tx.insert(inventoryMovements).values(buyable.map((l) => ({ variantId: l.variantId, delta: -l.quantity, reason: "sale", note: number })));
-      if (priced.couponId) await tx.insert(couponUsages).values({ couponId: priced.couponId, orderId: order.id, customerId: customer?.id ?? null, email: input.email, discountMinor: priced.discountMinor });
+      if (priced.couponId) await tx.insert(couponUsages).values({ couponId: priced.couponId, orderId: order.id, customerId: customer?.id ?? null, email: input.email || customer?.email || null, discountMinor: priced.discountMinor });
 
       // 5. Payment: the provider decides the initial payment state (cash stays pending until delivery).
-      const payment = await provider.initiate({ orderId: order.id, orderNumber: number, totalMinor: priced.totalMinor, prepaidMinor: plan.prepaidMinor, customerEmail: input.email, locale });
+      const payment = await provider.initiate({ orderId: order.id, orderNumber: number, totalMinor: priced.totalMinor, prepaidMinor: plan.prepaidMinor, customerEmail: input.email || customer?.email || "", locale });
       if (payment.paymentStatus !== "pending" || payment.reference)
         await tx.update(orders).set({ paymentStatus: payment.paymentStatus, paymentReference: payment.reference ?? null }).where(eq(orders.id, order.id));
 

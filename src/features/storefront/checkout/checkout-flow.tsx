@@ -12,11 +12,11 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
 import { metaCart, trackMeta } from "@/lib/meta-pixel";
 import { paymentPlan } from "@/lib/payments";
-import { addressSchema, customerInfoSchema, deliverySchema, fieldErrors, normalizePhone, paymentSchema, transferSchema, type FieldErrors } from "@/lib/validation/checkout";
+import { detailsSchema, distinctPhones, fieldErrors, normalizePhone, type FieldErrors } from "@/lib/validation/checkout";
 import { placeOrderAction } from "@/server/actions/checkout";
 import { OrderSummary } from "./order-summary";
-import { FREE_SHIPPING_THRESHOLD_MINOR } from "@/lib/shipping";
-import { AddressStep, DeliveryStep, InfoStep, PaymentStep, ReviewStep } from "./steps";
+import { DELIVERY_METHODS } from "@/lib/shipping";
+import { DetailsStep, ReviewStep } from "./steps";
 import { STEPS, type CheckoutForm, type PaymentMethodOption, type PaymentSettings, type SavedAddress, type StepKey } from "./types";
 
 type Props = {
@@ -26,7 +26,7 @@ type Props = {
   payments: PaymentSettings;
 };
 
-const schemas = { info: customerInfoSchema, address: addressSchema, delivery: deliverySchema, payment: paymentSchema.extend(transferSchema.shape) } as const;
+const schema = detailsSchema.superRefine(distinctPhones);
 
 export function CheckoutFlow({ customer, addresses, methods, payments }: Props) {
   const t = useTranslations("checkout");
@@ -37,8 +37,8 @@ export function CheckoutFlow({ customer, addresses, methods, payments }: Props) 
   const def = addresses.find((a) => a.isDefault) ?? addresses[0];
   const firstEnabled = methods.find((m) => m.enabled)?.id ?? "cod";
   const [form, setForm] = useState<CheckoutForm>({
-    name: customer?.name ?? "", email: customer?.email ?? "", phone: customer?.phone ?? def?.phone ?? "",
-    governorate: def?.governorate ?? "", city: def?.city ?? "", line1: def?.line1 ?? "", line2: def?.line2 ?? "", notes: def?.notes ?? "",
+    name: customer?.name ?? "", email: customer?.email ?? "", phone: customer?.phone ?? def?.phone ?? "", phone2: "",
+    governorate: def?.governorate ?? "", city: def?.city ?? "", line1: [def?.line1, def?.line2].filter(Boolean).join("، "), line2: "", notes: "",
     deliveryMethod: "standard", paymentMethod: firstEnabled, transferChannel: "", senderPhone: "", receiptToken: "", receiptUrl: "", saveAddress: false,
   });
   const [step, setStep] = useState(0);
@@ -79,26 +79,26 @@ export function CheckoutFlow({ customer, addresses, methods, payments }: Props) 
   }, [plan.needsTransfer, plan.channels, form.transferChannel]);
 
   const key: StepKey = STEPS[step]!;
-  const validate = (k: Exclude<StepKey, "review">) => {
-    const r = schemas[k].safeParse(form);
+  const validate = () => {
+    const r = schema.safeParse(form);
     const errs = r.success ? {} : fieldErrors(r.error);
-    if (k === "payment") {
-      if (!methods.some((m) => m.id === form.paymentMethod && m.enabled)) errs.paymentMethod = "required";
-      else if (plan.needsTransfer) {
-        const t = transferSchema.safeParse(form);
-        if (!form.transferChannel) errs.transferChannel = "required";
-        if (!form.senderPhone.trim()) errs.senderPhone = "required";
-        else if (!normalizePhone(form.senderPhone)) errs.senderPhone = "phone";
-        if (!t.success || !form.receiptToken) errs.receiptToken = "required";
-      }
+    if (!methods.some((m) => m.id === form.paymentMethod && m.enabled)) errs.paymentMethod = "required";
+    else if (plan.needsTransfer) {
+      if (!form.transferChannel) errs.transferChannel = "required";
+      if (!form.senderPhone.trim()) errs.senderPhone = "required";
+      else if (!normalizePhone(form.senderPhone)) errs.senderPhone = "phone";
+      if (!form.receiptToken) errs.receiptToken = "required";
     }
     setErrors(errs);
-    return Object.keys(errs).length === 0;
+    const bad = Object.keys(errs).filter((k) => errs[k]);
+    // Bring the first problem into view: the page is long on a phone.
+    if (bad.length) requestAnimationFrame(() => document.querySelector<HTMLElement>("[aria-invalid=true], [role=alert]")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    return bad.length === 0;
   };
 
   const next = () => {
-    if (key !== "review" && !validate(key)) return;
-    if (key === "payment" && pricing && !paymentTracked.current) {
+    if (key !== "review" && !validate()) return;
+    if (key === "details" && pricing && !paymentTracked.current) {
       paymentTracked.current = true;
       trackMeta("AddPaymentInfo", { ...metaCart(pricing), payment_method: form.paymentMethod });
     }
@@ -139,14 +139,13 @@ export function CheckoutFlow({ customer, addresses, methods, payments }: Props) 
       }
       if (res.code === "invalid" && res.errors) {
         setErrors(res.errors);
-        const bad = (["info", "address", "delivery", "payment"] as const).findIndex((k) => Object.keys(res.errors!).some((f) => f in (schemas[k] as unknown as { shape: object }).shape));
-        setStep(Math.max(0, bad));
+        setStep(0);
         return;
       }
       if (res.code === "proof") {
         setErrors(res.errors ?? {});
         setFormError("orderProof");
-        setStep(STEPS.indexOf("payment"));
+        setStep(0);
         return;
       }
       setFormError(res.code === "stock" ? "orderStock" : res.code === "coupon" ? "orderCoupon" : res.code === "payment" ? "orderPayment" : res.code === "rateLimited" ? "rateLimited" : "orderEmpty");
@@ -186,18 +185,15 @@ export function CheckoutFlow({ customer, addresses, methods, payments }: Props) 
           <h1 ref={heading} tabIndex={-1} className="mb-8 font-display text-4xl text-brand outline-none sm:text-5xl">{t(`steps.${key}`)}</h1>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div key={key} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
-              {key === "info" && <InfoStep form={form} errors={errors} set={set} signedIn={!!customer} />}
-              {key === "address" && (
-                <AddressStep form={form} errors={errors} set={set} saved={addresses} signedIn={!!customer}
-                  onPick={(a) => setForm((f) => ({ ...f, phone: a.phone, governorate: a.governorate, city: a.city, line1: a.line1, line2: a.line2 ?? "", notes: a.notes ?? "" }))} />
+              {key === "details" && (
+                <DetailsStep form={form} errors={errors} set={set} saved={addresses} signedIn={!!customer} methods={methods} settings={payments} plan={plan}
+                  shippingMinor={pricing?.shippingOptions?.standard ?? DELIVERY_METHODS[0].priceMinor}
+                  onPick={(a) => setForm((f) => ({ ...f, phone: a.phone, governorate: a.governorate, city: a.city, line1: [a.line1, a.line2].filter(Boolean).join("، ") }))} />
               )}
-              {key === "delivery" && <DeliveryStep form={form} set={set} options={pricing?.shippingOptions ?? null} freeThresholdMinor={pricing?.freeShippingThresholdMinor ?? FREE_SHIPPING_THRESHOLD_MINOR} window={pricing?.deliveryWindow ?? { minDays: 2, maxDays: 5 }} />}
-              {key === "payment" && <PaymentStep form={form} set={set} errors={errors} methods={methods} settings={payments} plan={plan} totalMinor={pricing?.totalMinor ?? 0} />}
-              {key === "review" && <ReviewStep form={form} plan={plan} onEdit={(k) => setStep(STEPS.indexOf(k))} />}
+              {key === "review" && <ReviewStep form={form} plan={plan} onEdit={() => setStep(0)} />}
             </motion.div>
           </AnimatePresence>
 
-          {errors.paymentMethod && key === "payment" && <p role="alert" className="mt-3 text-sm text-brand">{t("choosePayment")}</p>}
           {formError && <div className="mt-6 space-y-3"><FormError error={formError} />{(formError === "orderStock" || formError === "orderCoupon") && <Link href="/cart" className="text-sm text-brand underline underline-offset-4">{t("backToCart")}</Link>}</div>}
           {key === "review" && blocked && <p role="alert" className="mt-6 text-sm text-brand">{t("reviewIssues")} <Link href="/cart" className="underline underline-offset-4">{t("backToCart")}</Link></p>}
 
@@ -210,7 +206,7 @@ export function CheckoutFlow({ customer, addresses, methods, payments }: Props) 
             )}
           </div>
         </section>
-        <OrderSummary plan={plan} paymentMethod={form.paymentMethod} />
+        <OrderSummary paymentMethod={form.paymentMethod} />
       </div>
     </Container>
   );
