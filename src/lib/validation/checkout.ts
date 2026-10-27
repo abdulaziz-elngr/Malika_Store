@@ -19,7 +19,15 @@ const phone = z
     if (!n) ctx.addIssue({ code: "custom", message: "phone" });
     return n ?? "";
   });
-const email = z.string().trim().toLowerCase().min(1, "required").max(160, "tooLong").pipe(z.email("email"));
+/** Optional: an empty value is allowed (stored as ""), but anything typed must be a valid address. */
+const email = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .max(160, "tooLong")
+  .refine((v) => v === "" || z.email().safeParse(v).success, "email")
+  .optional()
+  .default("");
 
 export const customerInfoSchema = z.object({ name: text(2, 80), email, phone });
 export const addressSchema = z.object({

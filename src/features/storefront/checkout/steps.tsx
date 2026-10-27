@@ -22,7 +22,7 @@ export function InfoStep({ form, errors, set, signedIn }: StepProps & { signedIn
       <Field label={t("name")} error={errors.name} className="sm:col-span-2">
         {(p) => <input {...p} name="name" autoComplete="name" value={form.name} onChange={(e) => set("name", e.target.value)} className={inputClass} />}
       </Field>
-      <Field label={t("email")} error={errors.email}>
+      <Field label={`${t("email")} (${t("optional")})`} error={errors.email}>
         {(p) => <input {...p} name="email" type="email" inputMode="email" dir="ltr" autoComplete="email" value={form.email} onChange={(e) => set("email", e.target.value)} className={cn(inputClass, "text-start")} />}
       </Field>
       <Field label={t("phone")} error={errors.phone} hint={t("phoneHint")}>

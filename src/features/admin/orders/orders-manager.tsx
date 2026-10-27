@@ -67,9 +67,11 @@ export function OrdersManager({ rows, transitions, canEdit, emptyIcon }: Props) 
                 </Td>
                 <Td>
                   <p className="truncate font-medium">{o.name}</p>
-                  <p className="truncate text-xs text-muted" dir="ltr">
-                    {o.email}
-                  </p>
+                  {o.email && (
+                    <p className="truncate text-xs text-muted" dir="ltr">
+                      {o.email}
+                    </p>
+                  )}
                 </Td>
                 <Td className="whitespace-nowrap text-muted">{formatDate(o.createdAt, loc, true)}</Td>
                 <Td className="text-end tabular-nums">{formatMoney(o.totalMinor, loc)}</Td>

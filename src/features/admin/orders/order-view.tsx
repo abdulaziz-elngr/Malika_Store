@@ -28,9 +28,11 @@ export async function OrderView({ order }: { order: OrderAdmin }) {
           <div className="space-y-4 p-5 text-sm">
             <div className="space-y-1">
               <p className="text-base font-medium">{order.name}</p>
-              <p dir="ltr" className="text-start break-all text-muted">
-                {order.email}
-              </p>
+              {order.email && (
+                <p dir="ltr" className="text-start break-all text-muted">
+                  {order.email}
+                </p>
+              )}
               <p dir="ltr" className="text-start text-muted">
                 {order.phone}
               </p>

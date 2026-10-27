@@ -357,6 +357,7 @@
     "email": "Email",
     "phone": "Mobile number",
     "phoneHint": "Egyptian mobile, e.g. 01012345678. The courier will call this number.",
+    "optional": "optional",
     "haveAccount": "Already have an account?",
     "signIn": "Sign in",
     "savedAddresses": "Saved addresses",
@@ -402,6 +403,7 @@
     "continueShopping": "Continue shopping",
     "thanksTitle": "Thank you",
     "thanksBody": "Your order is placed. We will confirm it shortly and keep {email} updated.",
+    "thanksBodyNoEmail": "Your order is placed. We will confirm it shortly and call you on your mobile number.",
     "myOrders": "My orders",
     "createAccount": "Create an account",
     "transfer": {
