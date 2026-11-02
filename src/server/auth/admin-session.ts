@@ -25,8 +25,8 @@ export async function createAdminSession(userId: string) {
   const token = randomBytes(32).toString("base64url");
   const info = await requestInfo();
   await db.insert(adminSessions).values({ userId, tokenHash: hash(token), expiresAt: new Date(Date.now() + ABSOLUTE_MS), ...info });
-  // SameSite=Strict: the admin cookie is never sent on cross-site requests, which blocks CSRF at the browser level.
-  (await cookies()).set(ADMIN_COOKIE, token, { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production", path: "/", maxAge: ABSOLUTE_MS / 1000 });
+  // SameSite=Lax: not sent on cross-site POSTs (CSRF), but sent on top-level link clicks, so the "open order" link in alert emails keeps you signed in.
+  (await cookies()).set(ADMIN_COOKIE, token, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: ABSOLUTE_MS / 1000 });
 }
 
 export async function destroyAdminSession() {
